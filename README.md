@@ -120,6 +120,12 @@ PoseFix ships with ten initial presets in [`presets/`](presets/): Straighten Up,
 
 "Natural Upgrade" is not a preset. It is a presentation label for a safe composite of compatible corrections selected for a particular image.
 
+## Visual examples
+
+See [`docs/SHOWCASE.md`](docs/SHOWCASE.md) for three exploratory before/after infographics showing the intended PoseFix experience across upper-body, studio-standing, and full-body scene-contact portraits.
+
+These visuals communicate the product target; they are not benchmark claims for the current live-provider pipeline.
+
 ## Project status
 
 PoseFix is **pre-release research software**. The normalized contracts, deterministic selector, composite planner, target/spec builders, mock pipeline, and review decision logic are implemented. Live provider validation is the next evidence-gathering milestone.
