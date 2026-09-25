@@ -1,3 +1,4 @@
+import copy
 import json
 from pathlib import Path
 
@@ -15,9 +16,34 @@ def fixture():
     return json.loads(path.read_text())
 
 
-def test_selects_plan():
+def test_reference_portrait_selects_locked_composite():
     plan = choose_plan(fixture(), load_presets())
+
     assert plan["selection_status"] == "selected"
+    assert plan["label"] == "Natural Upgrade"
+    assert plan["components"] == [
+        {
+            "preset_id": "soft_weight_shift",
+            "role": "primary",
+            "weight": 1.0,
+        },
+        {
+            "preset_id": "turned_slightly",
+            "role": "secondary",
+            "weight": 0.35,
+        },
+    ]
+
+
+def test_preserves_original_when_no_correction_is_supported():
+    analysis = copy.deepcopy(fixture())
+    analysis["diagnosis"]["issues"] = []
+
+    plan = choose_plan(analysis, load_presets())
+
+    assert plan["selection_status"] == "no_strong_correction"
+    assert plan["recommendation"] == "preserve_original"
+    assert plan["components"] == []
 
 
 def test_builds_target_and_generation_spec():
