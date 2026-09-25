@@ -116,7 +116,7 @@ These contracts are intentionally provider-neutral.
 
 ## Canonical V1 presets
 
-PoseFix ships with ten initial presets in [`posefix/presets/`](posefix/presets/): Straighten Up, Relaxed Upright, Open Shoulders, Chin & Gaze Fix, Soft Weight Shift, One Hand Purpose, Turned Slightly, Casual Confidence, Professional Presence, and Editorial Lite.
+PoseFix ships with ten initial presets in [`presets/`](presets/): Straighten Up, Relaxed Upright, Open Shoulders, Chin & Gaze Fix, Soft Weight Shift, One Hand Purpose, Turned Slightly, Casual Confidence, Professional Presence, and Editorial Lite.
 
 "Natural Upgrade" is not a preset. It is a presentation label for a safe composite of compatible corrections selected for a particular image.
 
