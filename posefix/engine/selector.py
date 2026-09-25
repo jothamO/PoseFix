@@ -9,6 +9,33 @@ RISK_PENALTY = {
     "high": 0.18,
 }
 
+ISSUE_SPECIALISTS = {
+    "centered_weight": {"soft_weight_shift"},
+    "locked_knees": {"soft_weight_shift"},
+    "over_symmetric_legs": {"soft_weight_shift"},
+    "square_hips": {"turned_slightly"},
+    "square_shoulders": {"turned_slightly"},
+    "rounded_shoulders": {"open_shoulders", "straighten_up"},
+    "arms_pressed_to_torso": {"open_shoulders"},
+    "slightly_closed_arms": {"open_shoulders"},
+    "slouched_torso": {"straighten_up", "professional_presence"},
+    "rigid_torso": {"relaxed_upright"},
+    "compressed_neck": {"straighten_up"},
+    "chin_too_high": {"chin_gaze_fix"},
+    "chin_too_low": {"chin_gaze_fix"},
+    "chin_retracted": {"chin_gaze_fix"},
+    "chin_overprojected": {"chin_gaze_fix"},
+    "accidental_gaze": {"chin_gaze_fix"},
+    "unclear_gaze": {"chin_gaze_fix", "professional_presence"},
+    "unclear_hand_purpose": {"one_hand_purpose"},
+    "awkward_wrist": {"one_hand_purpose"},
+    "excessive_symmetry": {
+        "soft_weight_shift",
+        "turned_slightly",
+        "casual_confidence",
+    },
+}
+
 
 @dataclass(frozen=True)
 class ScoredPreset:
@@ -26,6 +53,41 @@ def _issue_contribution(
     return float(issue.get("severity", 0)) * float(
         issue.get("confidence", 0)
     )
+
+
+def _issue_fit(
+    issues: list[dict[str, Any]],
+    preset: dict[str, Any],
+) -> tuple[float, list[str], float]:
+    contributions = [
+        _issue_contribution(issue, preset)
+        for issue in issues
+    ]
+    matched = [
+        issues[index]["id"]
+        for index, value in enumerate(contributions)
+        if value > 0
+    ]
+    matched_values = sorted(
+        (value for value in contributions if value > 0),
+        reverse=True,
+    )
+    if not matched_values:
+        return 0.0, [], 0.0
+
+    strongest = matched_values[0]
+    supporting = matched_values[1] if len(matched_values) > 1 else 0.0
+    coverage_score = 0.65 * strongest + 0.35 * supporting
+
+    specialist_weight = 0.0
+    for issue, contribution in zip(issues, contributions, strict=True):
+        if contribution <= 0:
+            continue
+        specialists = ISSUE_SPECIALISTS.get(issue["id"], set())
+        if preset["preset_id"] in specialists:
+            specialist_weight = max(specialist_weight, contribution)
+
+    return coverage_score, matched, specialist_weight
 
 
 def _visibility_score(
@@ -77,16 +139,10 @@ def score_presets(
         if 0.0 in {visibility, pose_score, crop_score}:
             continue
 
-        contributions = [
-            _issue_contribution(issue, preset)
-            for issue in issues
-        ]
-        matched = [
-            issues[index]["id"]
-            for index, value in enumerate(contributions)
-            if value > 0
-        ]
-        issue_score = max(contributions, default=0.0)
+        issue_score, matched, specialist_weight = _issue_fit(
+            issues,
+            preset,
+        )
         if issue_score == 0:
             continue
 
@@ -103,12 +159,15 @@ def score_presets(
             analysis.get("feasibility", {}).get("overall", "medium"),
             0.7,
         )
+
         preservation = 0.9
         if preset["preset_id"] == "one_hand_purpose" and any(
             item.get("mechanic") == "hand_purpose"
             for item in analysis["diagnosis"].get("working_elements", [])
         ):
             preservation = 0.0
+
+        specialist_bonus = 0.03 * specialist_weight
 
         score = (
             0.30 * issue_score
@@ -117,6 +176,7 @@ def score_presets(
             + 0.15 * scene_score
             + 0.10 * preservation
             + 0.10 * feasibility
+            + specialist_bonus
             - RISK_PENALTY.get(preset.get("risk", "medium"), 0.08)
         )
         scored.append(
