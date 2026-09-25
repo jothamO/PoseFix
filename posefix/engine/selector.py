@@ -9,6 +9,8 @@ RISK_PENALTY = {
     "high": 0.18,
 }
 
+MIN_CORRECTION_SIGNAL = 0.45
+
 ISSUE_SPECIALISTS = {
     "centered_weight": {"soft_weight_shift"},
     "locked_knees": {"soft_weight_shift"},
@@ -210,6 +212,27 @@ def choose_plan(
     analysis: dict[str, Any],
     presets: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    issues = analysis["diagnosis"].get("issues", [])
+    correction_signal = max(
+        (
+            float(issue.get("severity", 0))
+            * float(issue.get("confidence", 0))
+            for issue in issues
+        ),
+        default=0.0,
+    )
+
+    if correction_signal < MIN_CORRECTION_SIGNAL:
+        return {
+            "schema_version": "composite_plan.v1",
+            "selection_status": "no_strong_correction",
+            "recommendation": "preserve_original",
+            "reason": "already_good_pose",
+            "correction_signal": round(correction_signal, 4),
+            "components": [],
+            "ranked_candidates": [],
+        }
+
     ranked = score_presets(analysis, presets)
     strong = [item for item in ranked if item.score >= 0.68]
 
