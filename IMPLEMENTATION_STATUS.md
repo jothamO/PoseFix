@@ -20,10 +20,11 @@
 - professional community-health files and GitHub issue/PR templates
 - CI configuration for Python 3.11-3.13
 - Dependabot configuration
+- public GitHub repository publication
 
 ## Validation status
 
-The deterministic and mock pipeline is covered by the test suite. The current milestone is live-provider validation on a real portrait; provider behavior should be treated as experimental until that testing is recorded.
+The deterministic and mock pipeline was validated locally before publication with 7 passing tests and successful Python bytecode compilation. GitHub CI is configured to independently run Ruff and the test suite. Live-provider behavior remains experimental until a real portrait is run through analysis -> planning -> generation -> review.
 
 ## Intentionally not implemented yet
 
