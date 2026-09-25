@@ -60,6 +60,7 @@ def decide_review(
             "identity_retention",
             "anatomical_plausibility",
             "hand_quality",
+            "pose_target_adherence",
         )
         if not failed:
             decision = "PASS"
@@ -80,7 +81,11 @@ def decide_review(
         "checks": normalized,
         "violations": violations,
         "retry_recommendation": (
-            {"strategy": "reduce_pose_strength"}
+            (
+                {"strategy": "increase_under_applied_pose_mechanics"}
+                if "pose_target_adherence" in failed
+                else {"strategy": "reduce_pose_strength"}
+            )
             if decision == "RETRY"
             else None
         ),
