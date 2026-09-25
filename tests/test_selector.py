@@ -58,3 +58,38 @@ def test_analysis_contract_validates():
     from posefix.validation import validate_contract
 
     validate_contract(fixture())
+
+
+def test_already_good_pose_returns_preserve_original():
+    analysis = copy.deepcopy(fixture())
+    analysis["diagnosis"]["issues"] = [
+        {
+            "id": "centered_weight",
+            "mechanic": "weight_distribution",
+            "severity": 0.30,
+            "confidence": 0.90,
+        }
+    ]
+
+    plan = choose_plan(analysis, load_presets())
+
+    assert plan["selection_status"] == "no_strong_correction"
+    assert plan["recommendation"] == "preserve_original"
+    assert plan["reason"] == "already_good_pose"
+    assert plan["components"] == []
+
+
+def test_meaningful_issue_still_selects_correction():
+    analysis = copy.deepcopy(fixture())
+    analysis["diagnosis"]["issues"] = [
+        {
+            "id": "centered_weight",
+            "mechanic": "weight_distribution",
+            "severity": 0.60,
+            "confidence": 0.90,
+        }
+    ]
+
+    plan = choose_plan(analysis, load_presets())
+
+    assert plan["selection_status"] == "selected"
