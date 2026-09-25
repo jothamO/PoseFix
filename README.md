@@ -6,6 +6,35 @@ PoseFix is an early open-source reference engine for correcting the pose in an e
 
 It is not a photo editor UI and it is not tied to one AI provider. PoseFix separates pose reasoning from orchestration and from the model that actually renders the edit.
 
+## See PoseFix in action
+
+These are exploratory visual demonstrations of the PoseFix product target: **fix the pose while keeping the photo recognizably the same**.
+
+### Full-body scene contact
+
+![PoseFix full-body scene-contact before and after](docs/assets/showcase/posefix-fence-fullbody.webp)
+
+<table>
+<tr>
+<td width="50%">
+
+### Studio standing
+
+<img src="docs/assets/showcase/posefix-studio-standing.webp" alt="PoseFix studio standing before and after" width="100%">
+
+</td>
+<td width="50%">
+
+### Upper body
+
+<img src="docs/assets/showcase/posefix-halfbody.webp" alt="PoseFix upper-body before and after" width="100%">
+
+</td>
+</tr>
+</table>
+
+These visuals show the intended correction philosophy rather than benchmark results from the current live-provider pipeline. See [the full visual showcase](docs/SHOWCASE.md).
+
 ## Why PoseFix exists
 
 A photo can be almost right: good expression, good outfit, good location, awkward posture. PoseFix is built around a simple rule:
@@ -119,12 +148,6 @@ These contracts are intentionally provider-neutral.
 PoseFix ships with ten initial presets in [`presets/`](presets/): Straighten Up, Relaxed Upright, Open Shoulders, Chin & Gaze Fix, Soft Weight Shift, One Hand Purpose, Turned Slightly, Casual Confidence, Professional Presence, and Editorial Lite.
 
 "Natural Upgrade" is not a preset. It is a presentation label for a safe composite of compatible corrections selected for a particular image.
-
-## Visual examples
-
-See [`docs/SHOWCASE.md`](docs/SHOWCASE.md) for three exploratory before/after infographics showing the intended PoseFix experience across upper-body, studio-standing, and full-body scene-contact portraits.
-
-These visuals communicate the product target; they are not benchmark claims for the current live-provider pipeline.
 
 ## Project status
 
