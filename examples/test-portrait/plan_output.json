@@ -1,0 +1,108 @@
+{
+  "plan": {
+    "schema_version": "composite_plan.v1",
+    "selection_status": "selected",
+    "label": "Natural Upgrade",
+    "components": [
+      {
+        "preset_id": "relaxed_upright",
+        "role": "primary",
+        "weight": 1.0
+      },
+      {
+        "preset_id": "open_shoulders",
+        "role": "secondary",
+        "weight": 0.35
+      }
+    ],
+    "ranked_candidates": [
+      {
+        "preset_id": "relaxed_upright",
+        "score": 0.8952,
+        "reasons": [
+          "centered_weight",
+          "excessive_symmetry"
+        ]
+      },
+      {
+        "preset_id": "soft_weight_shift",
+        "score": 0.8952,
+        "reasons": [
+          "centered_weight",
+          "excessive_symmetry"
+        ]
+      },
+      {
+        "preset_id": "casual_confidence",
+        "score": 0.8152,
+        "reasons": [
+          "centered_weight",
+          "square_shoulders",
+          "excessive_symmetry"
+        ]
+      },
+      {
+        "preset_id": "editorial_lite",
+        "score": 0.8152,
+        "reasons": [
+          "square_shoulders",
+          "excessive_symmetry"
+        ]
+      },
+      {
+        "preset_id": "turned_slightly",
+        "score": 0.8152,
+        "reasons": [
+          "square_shoulders",
+          "excessive_symmetry"
+        ]
+      },
+      {
+        "preset_id": "open_shoulders",
+        "score": 0.788,
+        "reasons": [
+          "slightly_closed_arms"
+        ]
+      }
+    ],
+    "unresolved_issues": [
+      "slightly_closed_arms",
+      "square_shoulders"
+    ]
+  },
+  "target": {
+    "schema_version": "pose_target.v1",
+    "source_analysis_version": "pose_analysis.v1",
+    "target_status": "ready",
+    "selected_preset": {
+      "preset_id": "relaxed_upright",
+      "label": "Natural Upgrade",
+      "intensity": "natural",
+      "selection_score": 0.8952
+    },
+    "preservation": {
+      "identity": "strict",
+      "facial_expression": "strict",
+      "gaze": "strict",
+      "hand_purpose": "strict",
+      "clothing": "strict",
+      "accessories": "strict",
+      "background": "strict",
+      "lighting": "strict",
+      "camera_perspective": "strict",
+      "overall_crop": "strict"
+    },
+    "pose_target": {
+      "weight_distribution": {"action":"shift","strength":0.4},
+      "knee_softness": {"action":"increase_on_free_leg","strength":0.3},
+      "shoulder_angle": {"action":"introduce_asymmetry","strength":0.25},
+      "hip_offset": {"action":"increase","strength":0.25},
+      "shoulder_openness": {"action":"increase","strength":0.1575},
+      "arm_to_torso_spacing": {"action":"increase","strength":0.105},
+      "elbow_position": {"action":"relax","strength":0.07}
+    },
+    "forbidden_changes": ["major_hand_repositioning","expression_change","body_reshape","major_head_rotation","walking_pose","background_replacement","clothing_redesign"],
+    "edit_budget": {"maximum_pose_change":"moderate","background_reconstruction_allowance":"minimal","clothing_reconstruction_allowance":"minimal","limb_reconstruction_allowance":"low"},
+    "fallback": {"if_target_not_feasible":"reduce_intensity","fallback_intensity":"subtle","if_still_not_feasible":"preserve_original_pose"}
+  }
+}

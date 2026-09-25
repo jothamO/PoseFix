@@ -1,0 +1,30 @@
+{
+  "schema_version": "pose_analysis.v1",
+  "analysis_status": "success",
+  "image": {"subject_count":1,"primary_subject_index":0,"orientation":"portrait","crop":"full_body","camera_view":"eye_level","scene_type":"studio","background_complexity":"low"},
+  "subject": {
+    "pose_type":"standing","body_orientation":"front","head_orientation":"front","support_context":"none",
+    "visibility":{"face":"fully_visible","neck":"fully_visible","shoulders":"fully_visible","torso":"fully_visible","elbows":"fully_visible","hands":"fully_visible","hips":"fully_visible","knees":"fully_visible","feet":"fully_visible"},
+    "occlusion":{"level":"low","regions":[]}
+  },
+  "diagnosis": {
+    "working_elements":[
+      {"mechanic":"hand_purpose","reason":"Both hands have a believable existing purpose.","confidence":0.98},
+      {"mechanic":"gaze","reason":"Direct gaze is intentional.","confidence":0.97},
+      {"mechanic":"torso_posture","reason":"Torso is already upright.","confidence":0.91}
+    ],
+    "issues":[
+      {"id":"centered_weight","mechanic":"weight_distribution","severity":0.67,"confidence":0.93},
+      {"id":"square_shoulders","mechanic":"shoulder_angle","severity":0.61,"confidence":0.95},
+      {"id":"excessive_symmetry","mechanic":"overall_symmetry","severity":0.72,"confidence":0.95},
+      {"id":"slightly_closed_arms","mechanic":"arm_to_torso_spacing","severity":0.38,"confidence":0.86}
+    ]
+  },
+  "edit_plan": {
+    "preserve":["identity","facial_expression","gaze","hand_purpose","clothing","accessories","background","lighting","camera_perspective","overall_crop"],
+    "adjust":["weight_distribution","hip_offset","shoulder_angle","overall_symmetry","arm_to_torso_spacing"],
+    "avoid":["major_hand_repositioning","expression_change","body_reshape","major_head_rotation","walking_pose","background_replacement","clothing_redesign"]
+  },
+  "feasibility":{"overall":"high","reconstruction_risk":"low","allowed_edit_strength":"moderate"},
+  "uncertainty":{"overall_confidence":0.92,"low_confidence_fields":[],"notes":[]}
+}

@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a reproducible PoseFix problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please do not include API keys, private photos, or sensitive personal data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include the smallest reproducible commands/configuration.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: PoseFix version or commit
+    validations:
+      required: true
+  - type: dropdown
+    id: path
+    attributes:
+      label: Execution path
+      options:
+        - Mock/reference pipeline
+        - OpenAI adapter
+        - Custom adapter
+        - Core engine only
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove credentials and private paths before pasting.
+      render: shell

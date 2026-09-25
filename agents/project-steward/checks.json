@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "goal_drift",
+    "architecture_drift",
+    "overengineering",
+    "contract_integrity",
+    "skill_boundaries",
+    "engine_boundaries",
+    "provider_neutrality",
+    "v1_scope",
+    "implementation_readiness",
+    "research_gaps"
+  ]
+}

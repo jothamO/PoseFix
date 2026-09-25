@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "posefix"
+version = "0.3.0"
+description = "Provider-agnostic pose-correction engine, skills, and MCP-ready toolkit"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "PoseFix contributors"}]
+dependencies = ["jsonschema>=4.23"]
+
+[project.optional-dependencies]
+openai = ["openai>=1.0"]
+dev = ["pytest>=8.0", "ruff>=0.8"]
+
+[project.scripts]
+posefix = "posefix.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["posefix*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
