@@ -186,6 +186,8 @@ def public_outputs(job: CorrectionJob) -> list[dict[str, Any]]:
     for index, item in enumerate(generated):
         review = reviews[index] if index < len(reviews) else {}
         decision = review.get("decision")
+        if decision != "PASS":
+            continue
         output_id = item.get("output_id", f"out_{index + 1:03d}")
         outputs.append(
             {
@@ -193,11 +195,7 @@ def public_outputs(job: CorrectionJob) -> list[dict[str, Any]]:
                 "variant_id": item.get("variant_id", f"option_{index + 1}"),
                 "decision": decision,
                 "overall_score": review.get("overall_score"),
-                "download_url": (
-                    f"/v1/corrections/{job.id}/outputs/{output_id}"
-                    if decision == "PASS"
-                    else None
-                ),
+                "download_url": f"/v1/corrections/{job.id}/outputs/{output_id}",
             }
         )
     return outputs

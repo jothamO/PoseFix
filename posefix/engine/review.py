@@ -21,6 +21,7 @@ HARD_VIOLATIONS = {
 THRESHOLDS = {
     "identity_retention": 0.90,
     "pose_target_adherence": 0.80,
+    "intensity_mode_adherence": 0.90,
     "anatomical_plausibility": 0.90,
     "hand_quality": 0.85,
     "clothing_retention": 0.90,
@@ -68,6 +69,7 @@ def decide_review(
             "anatomical_plausibility",
             "hand_quality",
             "pose_target_adherence",
+            "intensity_mode_adherence",
         )
         if not failed:
             decision = "PASS"
@@ -90,9 +92,13 @@ def decide_review(
         "violations": violations,
         "retry_recommendation": (
             (
-                {"strategy": "increase_under_applied_pose_mechanics"}
-                if "pose_target_adherence" in failed
-                else {"strategy": "reduce_pose_strength"}
+                (
+                    {"strategy": "restore_requested_intensity_mode"}
+                    if "intensity_mode_adherence" in failed
+                    else {"strategy": "increase_under_applied_pose_mechanics"}
+                    if "pose_target_adherence" in failed
+                    else {"strategy": "reduce_pose_strength"}
+                )
             )
             if decision == "RETRY"
             else None

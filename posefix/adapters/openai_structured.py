@@ -191,6 +191,7 @@ REVIEW_SCORES_FORMAT = {
                 "required": [
                     "identity_retention",
                     "pose_target_adherence",
+                    "intensity_mode_adherence",
                     "anatomical_plausibility",
                     "hand_quality",
                     "clothing_retention",
@@ -224,6 +225,26 @@ REVIEW_SCORES_FORMAT = {
                 "type": "array",
                 "items": {"type": "string"},
             },
+        },
+    },
+}
+
+
+VARIANT_DISTINCTNESS_FORMAT = {
+    "type": "json_schema",
+    "name": "posefix_variant_distinctness",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["distinctness_score", "materially_distinct"],
+        "properties": {
+            "distinctness_score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+            },
+            "materially_distinct": {"type": "boolean"},
         },
     },
 }

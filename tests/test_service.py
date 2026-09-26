@@ -119,8 +119,9 @@ def test_only_passed_outputs_are_downloadable(monkeypatch, tmp_path):
 
     status_response = client.get("/v1/corrections/result-job", headers=headers)
     outputs = status_response.json()["outputs"]
+    assert len(outputs) == 1
+    assert outputs[0]["output_id"] == "out_001"
     assert outputs[0]["download_url"] is not None
-    assert outputs[1]["download_url"] is None
 
     ok = client.get("/v1/corrections/result-job/outputs/out_001", headers=headers)
     bad = client.get("/v1/corrections/result-job/outputs/out_002", headers=headers)
