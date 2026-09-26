@@ -43,10 +43,10 @@ Core rule:
 If the result preserves the photo but only achieves Natural-level correction, review should RETRY the under-applied mechanics. Tightening a retry must remove unsafe reconstruction without collapsing the requested intensity back toward Natural.
 
 ## Bold
-Status: **experimental**
+Status: **locked**
 
 Intent:
-> Apply a substantial pose transformation while preserving identity, body shape, wardrobe, scene, and photographic credibility.
+> Re-stage the subject with a stronger pose and controlled composition changes, while preserving the same person and photographic world.
 
 Policy:
 - permissive intervention gate
@@ -55,9 +55,21 @@ Policy:
 - desired mechanic magnitude: 0.70-1.00
 - pose adherence threshold: 0.90
 - medium reconstruction tolerance
-- stronger pose freedom, but not weaker identity/body/scene protection
+- may substantially change the pose concept
+- may freely reassign hand purpose when anatomically plausible
+- may reinterpret support-object use
+- may shift subject placement moderately
+- may make a small subject-scale change
+- may recompose framing within the existing image bounds
+- must preserve the original image bounds
+- must not fabricate a new full-body composition from a partial crop by default
+- must preserve identity, body shape, clothing, scene, lighting, and camera-world continuity
 
-Bold remains experimental until Enhanced has sufficient validation evidence.
+Core rule:
+
+> **Bold may re-stage and modestly re-compose, but it must not become a new photoshoot.**
+
+Bold is harder to PASS, not easier: stronger transformation increases the pose-adherence requirement while preservation standards remain hard.
 
 ## Invariant
 
