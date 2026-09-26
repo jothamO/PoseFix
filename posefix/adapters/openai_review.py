@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from ..engine.review import decide_review
-from .openai_structured import REVIEW_SCORES_FORMAT
+from .openai_structured import REVIEW_SCORES_FORMAT, VARIANT_DISTINCTNESS_FORMAT
 from .review_base import ResultReviewAdapter
 
 
@@ -110,3 +110,59 @@ class OpenAIReviewAdapter(ResultReviewAdapter):
             structured["violations"],
             intensity=intensity,
         )
+
+
+    def compare_variants(
+        self,
+        *,
+        accepted_image_path: str,
+        candidate_image_path: str,
+        intensity: str,
+    ) -> dict[str, Any]:
+        if not os.getenv("OPENAI_API_KEY"):
+            raise RuntimeError("OPENAI_API_KEY is not set")
+
+        try:
+            from openai import OpenAI
+        except ImportError as exc:
+            raise RuntimeError(
+                "Install PoseFix with `pip install -e .[openai]`"
+            ) from exc
+
+        prompt = (
+            "Compare IMAGE 1 (already accepted PoseFix option) with IMAGE 2 "
+            "(candidate option). Judge whether IMAGE 2 is a materially distinct "
+            f"{intensity} pose solution. Different crop, focal length, framing, "
+            "camera distance, facial expression, or tiny limb shifts alone do not "
+            "count. Distinctness should come from meaningful pose mechanics such as "
+            "stance, torso angle, hand purpose, body orientation, support-object use, "
+            "or weight distribution. Return a 0-1 distinctness score and boolean."
+        )
+        response = OpenAI().responses.create(
+            model=self.model,
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": prompt},
+                        {
+                            "type": "input_image",
+                            "image_url": self._data_url(accepted_image_path),
+                            "detail": "high",
+                        },
+                        {
+                            "type": "input_image",
+                            "image_url": self._data_url(candidate_image_path),
+                            "detail": "high",
+                        },
+                    ],
+                }
+            ],
+            text={"format": VARIANT_DISTINCTNESS_FORMAT},
+        )
+        output_text = getattr(response, "output_text", None)
+        if not output_text:
+            raise RuntimeError(
+                "OpenAI distinctness response did not contain structured output_text"
+            )
+        return json.loads(output_text)
