@@ -8,8 +8,8 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from .models import CorrectionCreated, CorrectionResponse, ErrorResponse, Intensity
 from . import runtime
+from .models import CorrectionCreated, CorrectionResponse, ErrorResponse, Intensity
 
 bearer = HTTPBearer(auto_error=False)
 
