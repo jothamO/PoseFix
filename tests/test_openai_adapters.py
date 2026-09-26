@@ -8,9 +8,9 @@ from posefix.adapters.openai_vision import OpenAIVisionAdapter
 
 
 def test_current_openai_defaults():
-    assert OpenAIVisionAdapter().model == "gpt-6-astra"
-    assert OpenAIReviewAdapter().model == "gpt-6-astra"
-    assert OpenAIImageAdapter().model == "gpt-image-2.5-sunburst"
+    assert OpenAIVisionAdapter().model == "gpt-5.6-sol"
+    assert OpenAIReviewAdapter().model == "gpt-5.6-sol"
+    assert OpenAIImageAdapter().model == "gpt-image-2"
 
 
 def test_openai_structured_formats_are_strict():
