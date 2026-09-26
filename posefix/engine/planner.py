@@ -117,6 +117,24 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             item["strength"] = rule["strength"]
         mechanics.append(item)
 
+    intensity = preset["intensity"]
+    output_count = 3 if intensity == "bold" else 2
+    variation_plan = [
+        {
+            "variant_id": f"option_{chr(97 + index)}",
+            "intensity_multiplier": 1.0,
+            "solution_role": (
+                "primary_mechanic_emphasis"
+                if index == 0
+                else "alternate_valid_pose_solution"
+                if index == 1
+                else "alternate_valid_restaging_solution"
+            ),
+            "separate_output_required": True,
+        }
+        for index in range(output_count)
+    ]
+
     return {
         "schema_version": "generation_spec.v1",
         "source": {
@@ -127,8 +145,9 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
         "task": {
             "type": "pose_correction",
             "mode": "image_edit",
-            "output_count": 1,
-            "variation_policy": "controlled",
+            "output_count": output_count,
+            "variation_policy": "controlled_distinct_solutions",
+            "output_packaging": "separate_images_only",
         },
         "selected_preset": {
             "preset_id": preset["preset_id"],
@@ -206,9 +225,7 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             "minimum_quality": "production",
             "return_metadata": True,
         },
-        "variation_plan": [
-            {"variant_id": preset["intensity"], "intensity_multiplier": 1.0}
-        ],
+        "variation_plan": variation_plan,
         "retry_policy": {
             "max_attempts": 2,
             "on_identity_drift": "reduce_edit_strength",
