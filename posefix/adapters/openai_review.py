@@ -15,7 +15,7 @@ from .review_base import ResultReviewAdapter
 class OpenAIReviewAdapter(ResultReviewAdapter):
     name = "openai"
 
-    def __init__(self, model: str = "gpt-5.6-sol") -> None:
+    def __init__(self, model: str = "gpt-6-sol") -> None:
         self.model = model
 
     @staticmethod
