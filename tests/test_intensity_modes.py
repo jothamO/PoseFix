@@ -89,3 +89,36 @@ def test_bold_is_defined_but_experimental():
     assert policy.status == "experimental"
     assert policy.pose_adherence_threshold == 0.90
     assert policy.mechanic_budget == 6
+
+
+def test_enhanced_is_locked_frame_bounded_repose():
+    analysis = fixture()
+    plan = choose_plan(analysis, load_presets(), intensity="enhanced")
+    target = build_pose_target(analysis, plan, preset_map())
+    spec = build_generation_spec(target)
+
+    policy = get_intensity_policy("enhanced")
+    assert policy.status == "locked"
+    assert policy.pose_concept_policy == "may_reinterpret_within_source_frame"
+    assert policy.crop_policy == "preserve"
+    assert policy.unseen_anatomy_policy == "do_not_invent_for_repose"
+    assert policy.hand_purpose_policy == "may_reassign_if_pose_requires"
+
+    assert target["intensity_policy"]["pose_concept_policy"] == (
+        "may_reinterpret_within_source_frame"
+    )
+    assert target["intensity_policy"]["crop_policy"] == "preserve"
+    assert target["intensity_policy"]["unseen_anatomy_policy"] == (
+        "do_not_invent_for_repose"
+    )
+    assert spec["scene_constraints"]["crop"] == "preserve"
+    assert spec["scene_constraints"]["unseen_anatomy"] == (
+        "do_not_invent_for_repose"
+    )
+
+    hands = next(
+        region
+        for region in spec["protected_regions"]
+        if region["region"] == "hands"
+    )
+    assert hands["policy"] == "preserve_anatomy_allow_pose_role_change"

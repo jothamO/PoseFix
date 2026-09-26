@@ -74,6 +74,10 @@ def build_pose_target(
             },
             "pose_adherence_threshold": policy.pose_adherence_threshold,
             "reconstruction_tolerance": policy.reconstruction_tolerance,
+            "pose_concept_policy": policy.pose_concept_policy,
+            "crop_policy": policy.crop_policy,
+            "unseen_anatomy_policy": policy.unseen_anatomy_policy,
+            "hand_purpose_policy": policy.hand_purpose_policy,
             "status": policy.status,
         },
         "edit_budget": {
@@ -96,6 +100,8 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
     preset = target.get("selected_preset")
     if target.get("target_status") != "ready" or not preset:
         raise ValueError("Pose target is not ready for generation")
+
+    policy = get_intensity_policy(preset["intensity"])
 
     mechanics = []
     for name, rule in target.get("pose_target", {}).items():
@@ -147,7 +153,11 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             {"region": "hair", "policy": "strict_preserve"},
             {
                 "region": "hands",
-                "policy": "preserve_function_and_appearance",
+                "policy": (
+                    "preserve_function_and_appearance"
+                    if policy.hand_purpose_policy == "preserve"
+                    else "preserve_anatomy_allow_pose_role_change"
+                ),
             },
             {
                 "region": "clothing",
@@ -166,7 +176,8 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             "camera_position": "preserve",
             "camera_height": "preserve",
             "lens_character": "preserve",
-            "crop": "preserve",
+            "crop": policy.crop_policy,
+            "unseen_anatomy": policy.unseen_anatomy_policy,
         },
         "negative_constraints": list(target.get("forbidden_changes", [])),
         "edit_budget": target["edit_budget"],
