@@ -69,6 +69,7 @@ def test_review_pose_threshold_tracks_intensity():
     checks = {
         "identity_retention": 0.97,
         "pose_target_adherence": 0.84,
+        "intensity_mode_adherence": 0.97,
         "anatomical_plausibility": 0.97,
         "hand_quality": 0.96,
         "clothing_retention": 0.98,
@@ -172,3 +173,44 @@ def test_multiple_choices_are_separate_images_by_mode():
             item["separate_output_required"] is True
             for item in spec["variation_plan"]
         )
+
+
+def test_each_variant_is_locked_to_requested_intensity():
+    analysis = fixture()
+
+    for intensity in ("natural", "enhanced", "bold"):
+        plan = choose_plan(analysis, load_presets(), intensity=intensity)
+        target = build_pose_target(analysis, plan, preset_map())
+        spec = build_generation_spec(target)
+
+        assert all(
+            item["required_intensity"] == intensity
+            for item in spec["variation_plan"]
+        )
+        assert all(
+            item["mode_consistency_required"] is True
+            for item in spec["variation_plan"]
+        )
+
+
+def test_mode_inconsistent_option_retries():
+    checks = {
+        "identity_retention": 0.97,
+        "pose_target_adherence": 0.93,
+        "intensity_mode_adherence": 0.60,
+        "anatomical_plausibility": 0.97,
+        "hand_quality": 0.96,
+        "clothing_retention": 0.98,
+        "background_retention": 0.98,
+        "lighting_consistency": 0.96,
+        "ground_contact": 0.95,
+        "body_shape_preservation": 0.98,
+        "expression_preservation": 0.97,
+    }
+
+    result = decide_review(checks, [], intensity="bold")
+
+    assert result["decision"] == "RETRY"
+    assert result["retry_recommendation"] == {
+        "strategy": "restore_requested_intensity_mode"
+    }
