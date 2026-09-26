@@ -83,12 +83,18 @@ def test_review_pose_threshold_tracks_intensity():
     assert decide_review(checks, [], intensity="enhanced")["decision"] == "RETRY"
 
 
-def test_bold_is_defined_but_experimental():
+def test_bold_is_locked_controlled_restaging():
     policy = get_intensity_policy("bold")
 
-    assert policy.status == "experimental"
+    assert policy.status == "locked"
     assert policy.pose_adherence_threshold == 0.90
     assert policy.mechanic_budget == 6
+    assert policy.pose_concept_policy == "may_substantially_restage"
+    assert policy.crop_policy == "preserve_bounds"
+    assert policy.framing_policy == "may_recompose_within_bounds"
+    assert policy.subject_placement_policy == "moderate_shift_allowed"
+    assert policy.subject_scale_policy == "small_change_allowed"
+    assert policy.unseen_anatomy_policy == "do_not_invent_by_default"
 
 
 def test_enhanced_is_locked_frame_bounded_repose():
@@ -122,3 +128,47 @@ def test_enhanced_is_locked_frame_bounded_repose():
         if region["region"] == "hands"
     )
     assert hands["policy"] == "preserve_anatomy_allow_pose_role_change"
+
+
+def test_bold_generation_spec_keeps_same_photographic_world():
+    analysis = fixture()
+    plan = choose_plan(analysis, load_presets(), intensity="bold")
+    target = build_pose_target(analysis, plan, preset_map())
+    spec = build_generation_spec(target)
+
+    assert target["intensity_policy"]["status"] == "locked"
+    assert spec["scene_constraints"]["background"] == "preserve"
+    assert spec["scene_constraints"]["lighting"] == "preserve"
+    assert spec["scene_constraints"]["crop"] == "preserve_bounds"
+    assert spec["scene_constraints"]["framing"] == "may_recompose_within_bounds"
+    assert spec["scene_constraints"]["subject_placement"] == (
+        "moderate_shift_allowed"
+    )
+    assert spec["scene_constraints"]["subject_scale"] == "small_change_allowed"
+    assert spec["scene_constraints"]["unseen_anatomy"] == (
+        "do_not_invent_by_default"
+    )
+
+
+def test_multiple_choices_are_separate_images_by_mode():
+    analysis = fixture()
+
+    expected_counts = {
+        "natural": 2,
+        "enhanced": 2,
+        "bold": 3,
+    }
+
+    for intensity, count in expected_counts.items():
+        plan = choose_plan(analysis, load_presets(), intensity=intensity)
+        target = build_pose_target(analysis, plan, preset_map())
+        spec = build_generation_spec(target)
+
+        assert spec["task"]["output_count"] == count
+        assert spec["task"]["output_packaging"] == "separate_images_only"
+        assert spec["task"]["variation_policy"] == "controlled_distinct_solutions"
+        assert len(spec["variation_plan"]) == count
+        assert all(
+            item["separate_output_required"] is True
+            for item in spec["variation_plan"]
+        )

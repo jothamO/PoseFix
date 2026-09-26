@@ -36,6 +36,7 @@ class OpenAIImageAdapter:
             for item in spec.get("transform", {}).get("mechanics", [])
         )
         negatives = ", ".join(spec.get("negative_constraints", []))
+        scene = spec.get("scene_constraints", {})
         summary = spec.get("transform", {}).get(
             "summary",
             "Apply the requested pose correction.",
@@ -45,8 +46,15 @@ class OpenAIImageAdapter:
             f"{summary} Preserve strictly: {preserve}. "
             f"Requested pose mechanics: {mechanics}. "
             f"Do not: {negatives}. "
-            "Keep the same person, clothing, background, lighting, camera perspective, "
-            "and photographic moment except for the minimum necessary pose correction."
+            "Keep the same person, identity, body shape, clothing, background, and "
+            "lighting. Follow these composition constraints: "
+            f"crop={scene.get('crop', 'preserve')}; "
+            f"framing={scene.get('framing', 'preserve')}; "
+            f"subject_placement={scene.get('subject_placement', 'preserve')}; "
+            f"subject_scale={scene.get('subject_scale', 'preserve')}; "
+            f"unseen_anatomy={scene.get('unseen_anatomy', 'do_not_invent')}. "
+            "Return each requested pose choice as a separate standalone image, never "
+            "as a contact sheet, collage, split image, or combined comparison."
         )
 
     def generate(
@@ -69,7 +77,7 @@ class OpenAIImageAdapter:
                 "request": {
                     "generation_spec_version": generation_spec["schema_version"],
                     "preset_id": generation_spec["selected_preset"]["preset_id"],
-                    "requested_variant_count": 1,
+                    "requested_variant_count": generation_spec["task"]["output_count"],
                 },
                 "outputs": [],
                 "warnings": [],
@@ -87,21 +95,43 @@ class OpenAIImageAdapter:
         out_dir = Path(output_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
 
+        output_count = int(generation_spec["task"]["output_count"])
         with open(source_image_path, "rb") as image_file:
             result = client.images.edit(
                 model=self.model,
                 image=image_file,
                 prompt=self._prompt(generation_spec),
                 quality="high",
+                n=output_count,
             )
 
-        item = result.data[0]
-        encoded = getattr(item, "b64_json", None)
-        if not encoded:
-            raise RuntimeError("OpenAI image edit did not return b64_json")
+        variation_plan = generation_spec.get("variation_plan", [])
+        outputs = []
+        for index, item in enumerate(result.data):
+            encoded = getattr(item, "b64_json", None)
+            if not encoded:
+                raise RuntimeError("OpenAI image edit did not return b64_json")
 
-        target = out_dir / "openai_out_001.png"
-        target.write_bytes(base64.b64decode(encoded))
+            output_number = index + 1
+            target = out_dir / f"openai_out_{output_number:03d}.png"
+            target.write_bytes(base64.b64decode(encoded))
+            variant = (
+                variation_plan[index]["variant_id"]
+                if index < len(variation_plan)
+                else f"option_{chr(97 + index)}"
+            )
+            outputs.append(
+                {
+                    "output_id": f"out_{output_number:03d}",
+                    "variant_id": variant,
+                    "image_ref": str(target),
+                    "generation_metadata": {
+                        "attempt": 1,
+                        "provider_request_id": getattr(result, "id", None),
+                        "seed": None,
+                    },
+                }
+            )
 
         return {
             "schema_version": "generation_result.v1",
@@ -114,20 +144,9 @@ class OpenAIImageAdapter:
             "request": {
                 "generation_spec_version": generation_spec["schema_version"],
                 "preset_id": generation_spec["selected_preset"]["preset_id"],
-                "requested_variant_count": 1,
+                "requested_variant_count": output_count,
             },
-            "outputs": [
-                {
-                    "output_id": "out_001",
-                    "variant_id": "natural",
-                    "image_ref": str(target),
-                    "generation_metadata": {
-                        "attempt": 1,
-                        "provider_request_id": getattr(result, "id", None),
-                        "seed": None,
-                    },
-                }
-            ],
+            "outputs": outputs,
             "warnings": [],
             "errors": [],
         }
