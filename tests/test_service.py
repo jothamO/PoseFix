@@ -8,6 +8,7 @@ from PIL import Image
 from posefix.service.app import app
 from posefix.service.runtime import STORE
 
+
 def _png_1x1() -> bytes:
     buffer = BytesIO()
     Image.new("RGB", (1, 1), (0, 0, 0)).save(buffer, format="PNG")
