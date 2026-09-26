@@ -123,6 +123,8 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
         {
             "variant_id": f"option_{chr(97 + index)}",
             "intensity_multiplier": 1.0,
+            "required_intensity": intensity,
+            "mode_consistency_required": True,
             "solution_role": (
                 "primary_mechanic_emphasis"
                 if index == 0
@@ -233,11 +235,13 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             "on_anatomy_failure": "retry_with_stricter_pose_constraints",
             "on_hand_failure": "preserve_original_hand_geometry",
             "on_pose_failure": "retry_under_applied_mechanics_then_fallback",
+            "on_intensity_mode_failure": "regenerate_at_requested_mode",
         },
         "review_requirements": {
             "must_check": [
                 "identity_retention",
                 "pose_target_adherence",
+                "intensity_mode_adherence",
                 "anatomical_plausibility",
                 "hand_quality",
                 "clothing_retention",
