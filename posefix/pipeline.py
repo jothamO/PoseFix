@@ -80,6 +80,53 @@ def _retry_spec(
     return retry_spec
 
 
+def _review_candidate(
+    *,
+    source_image_path: str,
+    target: dict[str, Any],
+    spec: dict[str, Any],
+    candidate: dict[str, Any],
+    review_adapter: Any,
+) -> dict[str, Any] | None:
+    generated_path = candidate.get("image_ref")
+    if not generated_path or not Path(generated_path).exists():
+        return None
+
+    review = review_adapter.review(
+        source_image_path=source_image_path,
+        generated_image_path=generated_path,
+        pose_target=target,
+        generation_spec=spec,
+    )
+    validate_contract(review)
+    return review
+
+
+def _is_distinct_from_accepted(
+    *,
+    review_adapter: Any,
+    accepted_outputs: list[dict[str, Any]],
+    candidate_path: str,
+    intensity: str,
+) -> tuple[bool, float | None]:
+    distinctness_checker = getattr(review_adapter, "compare_variants", None)
+    if not distinctness_checker or not accepted_outputs:
+        return True, None
+
+    minimum_score = 1.0
+    for accepted_output in accepted_outputs:
+        comparison = distinctness_checker(
+            accepted_image_path=accepted_output["image_ref"],
+            candidate_image_path=candidate_path,
+            intensity=intensity,
+        )
+        score = float(comparison.get("distinctness_score", 0.0))
+        minimum_score = min(minimum_score, score)
+        if not bool(comparison.get("materially_distinct", False)) or score < 0.80:
+            return False, score
+    return True, minimum_score
+
+
 def generate_and_review(
     *,
     source_image_path: str,
@@ -98,8 +145,6 @@ def generate_and_review(
             "attempt_log": [],
         }
 
-    # Without a reviewer there is no safe output gate, so preserve the legacy
-    # single generation path for low-level/debug use only.
     if review_adapter is None:
         generation = image_adapter.generate(
             source_image_path=source_image_path,
@@ -115,7 +160,7 @@ def generate_and_review(
         }
 
     variants = spec.get("variation_plan", [])
-    max_attempts = int(spec.get("retry_policy", {}).get("max_attempts", 4))
+    requested_count = len(variants)
     accepted_outputs: list[dict[str, Any]] = []
     accepted_reviews: list[dict[str, Any]] = []
     attempt_log: list[dict[str, Any]] = []
@@ -123,148 +168,224 @@ def generate_and_review(
     request: dict[str, Any] = {}
     warnings: list[Any] = []
     errors: list[Any] = []
+    intensity = spec["selected_preset"]["intensity"]
+
+    # Cost-bounded policy:
+    # 1) generate the requested choices once as a batch,
+    # 2) keep only candidates that pass review and distinctness,
+    # 3) give each failed slot exactly one targeted replacement attempt.
+    initial_generation = image_adapter.generate(
+        source_image_path=source_image_path,
+        generation_spec=spec,
+        output_dir=str(Path(output_dir) / "initial"),
+    )
+    validate_contract(initial_generation)
+
+    provider = initial_generation.get("provider", {})
+    request = initial_generation.get("request", {})
+    warnings.extend(initial_generation.get("warnings", []))
+    errors.extend(initial_generation.get("errors", []))
+
+    initial_outputs = initial_generation.get("outputs", [])
+    failed_slots: list[tuple[int, dict[str, Any], dict[str, Any] | None]] = []
 
     for slot_index, variant in enumerate(variants):
-        previous_review: dict[str, Any] | None = None
-        accepted = False
         slot_id = variant.get("variant_id", f"option_{slot_index + 1}")
-
-        for attempt in range(1, max_attempts + 1):
-            attempt_spec = _retry_spec(
-                spec,
-                variant=variant,
-                attempt=attempt,
-                previous_review=previous_review,
-            )
-            attempt_dir = str(Path(output_dir) / slot_id / f"attempt_{attempt}")
-            generation = image_adapter.generate(
-                source_image_path=source_image_path,
-                generation_spec=attempt_spec,
-                output_dir=attempt_dir,
-            )
-            validate_contract(generation)
-
-            provider = generation.get("provider", provider)
-            request = generation.get("request", request)
-            warnings.extend(generation.get("warnings", []))
-            errors.extend(generation.get("errors", []))
-
-            candidates = generation.get("outputs", [])
-            if not candidates:
-                attempt_log.append(
-                    {
-                        "variant_id": slot_id,
-                        "attempt": attempt,
-                        "decision": "RETRY",
-                        "reason": "no_candidate_output",
-                    }
-                )
-                previous_review = {
-                    "decision": "RETRY",
-                    "retry_recommendation": {"strategy": "retry_provider_output"},
-                }
-                continue
-
-            candidate = candidates[0]
-            generated_path = candidate.get("image_ref")
-            if not generated_path or not Path(generated_path).exists():
-                attempt_log.append(
-                    {
-                        "variant_id": slot_id,
-                        "attempt": attempt,
-                        "decision": "RETRY",
-                        "reason": "missing_candidate_file",
-                    }
-                )
-                previous_review = {
-                    "decision": "RETRY",
-                    "retry_recommendation": {"strategy": "retry_provider_output"},
-                }
-                continue
-
-            review = review_adapter.review(
-                source_image_path=source_image_path,
-                generated_image_path=generated_path,
-                pose_target=target,
-                generation_spec=attempt_spec,
-            )
-            validate_contract(review)
-            decision = review.get("decision")
-
+        candidate = initial_outputs[slot_index] if slot_index < len(initial_outputs) else None
+        if not candidate:
             attempt_log.append(
                 {
                     "variant_id": slot_id,
-                    "attempt": attempt,
-                    "decision": decision,
-                    "overall_score": review.get("overall_score"),
-                    "retry_recommendation": review.get("retry_recommendation"),
+                    "attempt": 1,
+                    "decision": "RETRY",
+                    "reason": "no_candidate_output",
                 }
             )
-
-            if decision == "PASS":
-                distinctness_checker = getattr(
-                    review_adapter,
-                    "compare_variants",
-                    None,
+            failed_slots.append(
+                (
+                    slot_index,
+                    variant,
+                    {
+                        "decision": "RETRY",
+                        "retry_recommendation": {"strategy": "retry_provider_output"},
+                    },
                 )
-                distinctness_failed = False
-                if distinctness_checker and accepted_outputs:
-                    for accepted_output in accepted_outputs:
-                        comparison = distinctness_checker(
-                            accepted_image_path=accepted_output["image_ref"],
-                            candidate_image_path=generated_path,
-                            intensity=spec["selected_preset"]["intensity"],
-                        )
-                        score = float(comparison.get("distinctness_score", 0.0))
-                        materially_distinct = bool(
-                            comparison.get("materially_distinct", False)
-                        )
-                        if not materially_distinct or score < 0.80:
-                            attempt_log.append(
-                                {
-                                    "variant_id": slot_id,
-                                    "attempt": attempt,
-                                    "decision": "RETRY",
-                                    "reason": "insufficient_variant_distinctness",
-                                    "distinctness_score": score,
-                                }
-                            )
-                            previous_review = {
-                                "decision": "RETRY",
-                                "retry_recommendation": {
-                                    "strategy": "diversify_pose_solution"
-                                },
-                            }
-                            distinctness_failed = True
-                            break
+            )
+            continue
 
-                if distinctness_failed:
-                    continue
+        review = _review_candidate(
+            source_image_path=source_image_path,
+            target=target,
+            spec=spec,
+            candidate=candidate,
+            review_adapter=review_adapter,
+        )
+        if review is None:
+            attempt_log.append(
+                {
+                    "variant_id": slot_id,
+                    "attempt": 1,
+                    "decision": "RETRY",
+                    "reason": "missing_candidate_file",
+                }
+            )
+            failed_slots.append(
+                (
+                    slot_index,
+                    variant,
+                    {
+                        "decision": "RETRY",
+                        "retry_recommendation": {"strategy": "retry_provider_output"},
+                    },
+                )
+            )
+            continue
 
-                candidate = dict(candidate)
-                candidate["output_id"] = f"out_{slot_index + 1:03d}"
-                candidate["variant_id"] = slot_id
-                metadata = dict(candidate.get("generation_metadata", {}))
-                metadata["attempt"] = attempt
-                candidate["generation_metadata"] = metadata
-                accepted_outputs.append(candidate)
+        decision = review.get("decision")
+        attempt_log.append(
+            {
+                "variant_id": slot_id,
+                "attempt": 1,
+                "decision": decision,
+                "overall_score": review.get("overall_score"),
+                "retry_recommendation": review.get("retry_recommendation"),
+            }
+        )
+
+        if decision == "PASS":
+            generated_path = candidate["image_ref"]
+            distinct, score = _is_distinct_from_accepted(
+                review_adapter=review_adapter,
+                accepted_outputs=accepted_outputs,
+                candidate_path=generated_path,
+                intensity=intensity,
+            )
+            if distinct:
+                accepted = dict(candidate)
+                accepted["output_id"] = f"out_{slot_index + 1:03d}"
+                accepted["variant_id"] = slot_id
+                metadata = dict(accepted.get("generation_metadata", {}))
+                metadata["attempt"] = 1
+                accepted["generation_metadata"] = metadata
+                accepted_outputs.append(accepted)
                 accepted_reviews.append(review)
-                accepted = True
-                break
+                continue
 
-            previous_review = review
-
-        if not accepted:
             attempt_log.append(
                 {
                     "variant_id": slot_id,
-                    "attempt": max_attempts,
-                    "decision": "UNFILLED",
-                    "reason": "retry_budget_exhausted",
+                    "attempt": 1,
+                    "decision": "RETRY",
+                    "reason": "insufficient_variant_distinctness",
+                    "distinctness_score": score,
                 }
             )
+            review = {
+                "decision": "RETRY",
+                "retry_recommendation": {"strategy": "diversify_pose_solution"},
+            }
 
-    requested_count = len(variants)
+        failed_slots.append((slot_index, variant, review))
+
+    # One targeted retry per failed slot. No final retry.
+    for slot_index, variant, previous_review in failed_slots:
+        slot_id = variant.get("variant_id", f"option_{slot_index + 1}")
+        retry_spec = _retry_spec(
+            spec,
+            variant=variant,
+            attempt=2,
+            previous_review=previous_review,
+        )
+        retry_generation = image_adapter.generate(
+            source_image_path=source_image_path,
+            generation_spec=retry_spec,
+            output_dir=str(Path(output_dir) / slot_id / "retry"),
+        )
+        validate_contract(retry_generation)
+
+        provider = retry_generation.get("provider", provider)
+        warnings.extend(retry_generation.get("warnings", []))
+        errors.extend(retry_generation.get("errors", []))
+        candidates = retry_generation.get("outputs", [])
+        if not candidates:
+            attempt_log.append(
+                {
+                    "variant_id": slot_id,
+                    "attempt": 2,
+                    "decision": "UNFILLED",
+                    "reason": "targeted_retry_failed",
+                }
+            )
+            continue
+
+        candidate = candidates[0]
+        review = _review_candidate(
+            source_image_path=source_image_path,
+            target=target,
+            spec=retry_spec,
+            candidate=candidate,
+            review_adapter=review_adapter,
+        )
+        if review is None:
+            attempt_log.append(
+                {
+                    "variant_id": slot_id,
+                    "attempt": 2,
+                    "decision": "UNFILLED",
+                    "reason": "targeted_retry_missing_file",
+                }
+            )
+            continue
+
+        decision = review.get("decision")
+        attempt_log.append(
+            {
+                "variant_id": slot_id,
+                "attempt": 2,
+                "decision": decision,
+                "overall_score": review.get("overall_score"),
+                "retry_recommendation": review.get("retry_recommendation"),
+            }
+        )
+        if decision != "PASS":
+            attempt_log.append(
+                {
+                    "variant_id": slot_id,
+                    "attempt": 2,
+                    "decision": "UNFILLED",
+                    "reason": "targeted_retry_did_not_pass",
+                }
+            )
+            continue
+
+        generated_path = candidate["image_ref"]
+        distinct, score = _is_distinct_from_accepted(
+            review_adapter=review_adapter,
+            accepted_outputs=accepted_outputs,
+            candidate_path=generated_path,
+            intensity=intensity,
+        )
+        if not distinct:
+            attempt_log.append(
+                {
+                    "variant_id": slot_id,
+                    "attempt": 2,
+                    "decision": "UNFILLED",
+                    "reason": "targeted_retry_not_distinct",
+                    "distinctness_score": score,
+                }
+            )
+            continue
+
+        accepted = dict(candidate)
+        accepted["output_id"] = f"out_{slot_index + 1:03d}"
+        accepted["variant_id"] = slot_id
+        metadata = dict(accepted.get("generation_metadata", {}))
+        metadata["attempt"] = 2
+        accepted["generation_metadata"] = metadata
+        accepted_outputs.append(accepted)
+        accepted_reviews.append(review)
+
     validated_count = len(accepted_outputs)
     if validated_count == requested_count:
         generation_status = "success"
@@ -281,6 +402,8 @@ def generate_and_review(
             **request,
             "requested_variant_count": requested_count,
             "validated_variant_count": validated_count,
+            "generation_budget": requested_count + len(failed_slots),
+            "generation_budget_policy": "initial_batch_plus_one_targeted_retry_per_failed_slot",
         },
         "outputs": accepted_outputs,
         "warnings": warnings,
