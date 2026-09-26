@@ -7,13 +7,15 @@ import os
 from pathlib import Path
 from typing import Any
 
+from ..engine.review import decide_review
+from .openai_structured import REVIEW_SCORES_FORMAT
 from .review_base import ResultReviewAdapter
 
 
 class OpenAIReviewAdapter(ResultReviewAdapter):
     name = "openai"
 
-    def __init__(self, model: str = "gpt-5.6-luna") -> None:
+    def __init__(self, model: str = "gpt-5.6-sol") -> None:
         self.model = model
 
     @staticmethod
@@ -29,13 +31,12 @@ class OpenAIReviewAdapter(ResultReviewAdapter):
         generation_spec: dict[str, Any],
     ) -> str:
         return (
-            "You are the PoseFix result-review skill. Compare IMAGE 1 "
-            "(authoritative source) with IMAGE 2 (generated edit). "
-            "Judge execution, not beauty. Return ONLY valid JSON matching "
-            "result_review.v1. Decision must be PASS, RETRY, FALLBACK, or REJECT. "
-            "Check identity retention, pose target adherence, anatomical plausibility, "
-            "hand quality, clothing retention, background retention, lighting consistency, "
-            "ground contact, body shape preservation, and expression preservation. "
+            "Compare IMAGE 1 (authoritative source) with IMAGE 2 (generated edit). "
+            "Judge execution against the requested PoseFix target, not beauty. "
+            "Return normalized scores from 0 to 1 for every required review check "
+            "and list only concrete hard violations that are visibly present. "
+            "Do not decide PASS/RETRY/FALLBACK/REJECT; deterministic PoseFix engine "
+            "code will make that decision. "
             f"POSE TARGET: {json.dumps(pose_target, separators=(',', ':'))} "
             f"GENERATION SPEC: {json.dumps(generation_spec, separators=(',', ':'))}"
         )
@@ -81,12 +82,22 @@ class OpenAIReviewAdapter(ResultReviewAdapter):
                     ],
                 }
             ],
+            text={"format": REVIEW_SCORES_FORMAT},
         )
         output_text = getattr(response, "output_text", None)
         if not output_text:
-            raise RuntimeError("OpenAI review response did not contain output_text")
+            raise RuntimeError(
+                "OpenAI review response did not contain structured output_text"
+            )
 
         try:
-            return json.loads(output_text)
+            structured = json.loads(output_text)
         except json.JSONDecodeError as exc:
-            raise RuntimeError("OpenAI review response was not valid JSON") from exc
+            raise RuntimeError(
+                "OpenAI review structured output was not valid JSON"
+            ) from exc
+
+        return decide_review(
+            structured["scores"],
+            structured["violations"],
+        )
