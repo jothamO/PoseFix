@@ -229,7 +229,7 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
         },
         "variation_plan": variation_plan,
         "retry_policy": {
-            "max_attempts": 2,
+            "max_attempts": 4,
             "on_identity_drift": "reduce_edit_strength",
             "on_background_drift": "tighten_preservation",
             "on_anatomy_failure": "retry_with_stricter_pose_constraints",
