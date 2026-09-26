@@ -194,6 +194,7 @@ REVIEW_SCORES_FORMAT = {
                     "anatomical_plausibility",
                     "hand_quality",
                     "clothing_retention",
+                    "accessory_retention",
                     "background_retention",
                     "lighting_consistency",
                     "ground_contact",
