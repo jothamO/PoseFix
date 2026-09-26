@@ -199,7 +199,7 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             "on_background_drift": "tighten_preservation",
             "on_anatomy_failure": "retry_with_stricter_pose_constraints",
             "on_hand_failure": "preserve_original_hand_geometry",
-            "on_pose_failure": "fallback_to_lower_intensity",
+            "on_pose_failure": "retry_under_applied_mechanics_then_fallback",
         },
         "review_requirements": {
             "must_check": [
