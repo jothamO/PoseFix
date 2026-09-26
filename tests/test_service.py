@@ -1,15 +1,20 @@
 from __future__ import annotations
 
-import base64
+from io import BytesIO
 
 from fastapi.testclient import TestClient
+from PIL import Image
 
 from posefix.service.app import app
 from posefix.service.runtime import STORE
 
-PNG_1X1 = base64.b64decode(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZKj8AAAAASUVORK5CYII="
-)
+def _png_1x1() -> bytes:
+    buffer = BytesIO()
+    Image.new("RGB", (1, 1), (0, 0, 0)).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+PNG_1X1 = _png_1x1()
 
 
 def test_health_is_public():
