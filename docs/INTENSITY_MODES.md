@@ -105,3 +105,23 @@ Skills reason.
 Engine governs.
 Adapters translate.
 ```
+
+
+## Multiple-choice outputs
+
+Pose correction is not treated as a single-answer problem.
+
+Default choice counts:
+- Natural: 2
+- Enhanced: 2
+- Bold: 3
+
+Each choice must be a distinct, valid solution at the requested intensity.
+
+> **Multiple choices must be returned as separate image outputs, never merged into a contact sheet or combined image.**
+
+Rules:
+- every option is independently reviewable and selectable
+- all options must satisfy the same preservation standards
+- options should differ by pose solution, not by safety level
+- invalid options are filtered by review and should not be shown as valid choices
