@@ -171,7 +171,7 @@ def execute_correction(job_id: str) -> None:
             return
 
         STORE.update(job_id, status="completed", result=result)
-    except Exception:
+    except Exception:  # noqa: BLE001 - service boundary sanitizes provider failures
         STORE.update(job_id, status="failed", error="provider_or_pipeline_error")
 
 
