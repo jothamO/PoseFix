@@ -85,9 +85,7 @@ def build_pose_target(
         "fallback": {
             "if_target_not_feasible": "reduce_intensity",
             "fallback_intensity": (
-                "enhanced" if intensity == "bold"
-                else "natural" if intensity == "enhanced"
-                else "natural"
+                "enhanced" if intensity == "bold" else "natural"
             ),
             "if_still_not_feasible": "preserve_original_pose",
         },
