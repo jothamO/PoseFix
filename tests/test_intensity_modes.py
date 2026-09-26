@@ -148,3 +148,27 @@ def test_bold_generation_spec_keeps_same_photographic_world():
     assert spec["scene_constraints"]["unseen_anatomy"] == (
         "do_not_invent_by_default"
     )
+
+
+def test_multiple_choices_are_separate_images_by_mode():
+    analysis = fixture()
+
+    expected_counts = {
+        "natural": 2,
+        "enhanced": 2,
+        "bold": 3,
+    }
+
+    for intensity, count in expected_counts.items():
+        plan = choose_plan(analysis, load_presets(), intensity=intensity)
+        target = build_pose_target(analysis, plan, preset_map())
+        spec = build_generation_spec(target)
+
+        assert spec["task"]["output_count"] == count
+        assert spec["task"]["output_packaging"] == "separate_images_only"
+        assert spec["task"]["variation_policy"] == "controlled_distinct_solutions"
+        assert len(spec["variation_plan"]) == count
+        assert all(
+            item["separate_output_required"] is True
+            for item in spec["variation_plan"]
+        )
