@@ -228,3 +228,23 @@ REVIEW_SCORES_FORMAT = {
         },
     },
 }
+
+
+VARIANT_DISTINCTNESS_FORMAT = {
+    "type": "json_schema",
+    "name": "posefix_variant_distinctness",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["distinctness_score", "materially_distinct"],
+        "properties": {
+            "distinctness_score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+            },
+            "materially_distinct": {"type": "boolean"},
+        },
+    },
+}
