@@ -202,6 +202,45 @@ def generate_and_review(
             )
 
             if decision == "PASS":
+                distinctness_checker = getattr(
+                    review_adapter,
+                    "compare_variants",
+                    None,
+                )
+                distinctness_failed = False
+                if distinctness_checker and accepted_outputs:
+                    for accepted_output in accepted_outputs:
+                        comparison = distinctness_checker(
+                            accepted_image_path=accepted_output["image_ref"],
+                            candidate_image_path=generated_path,
+                            intensity=spec["selected_preset"]["intensity"],
+                        )
+                        score = float(comparison.get("distinctness_score", 0.0))
+                        materially_distinct = bool(
+                            comparison.get("materially_distinct", False)
+                        )
+                        if not materially_distinct or score < 0.80:
+                            attempt_log.append(
+                                {
+                                    "variant_id": slot_id,
+                                    "attempt": attempt,
+                                    "decision": "RETRY",
+                                    "reason": "insufficient_variant_distinctness",
+                                    "distinctness_score": score,
+                                }
+                            )
+                            previous_review = {
+                                "decision": "RETRY",
+                                "retry_recommendation": {
+                                    "strategy": "diversify_pose_solution"
+                                },
+                            }
+                            distinctness_failed = True
+                            break
+
+                if distinctness_failed:
+                    continue
+
                 candidate = dict(candidate)
                 candidate["output_id"] = f"out_{slot_index + 1:03d}"
                 candidate["variant_id"] = slot_id
