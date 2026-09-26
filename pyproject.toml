@@ -13,7 +13,7 @@ authors = [{name = "PoseFix contributors"}]
 dependencies = ["jsonschema>=4.23"]
 
 [project.optional-dependencies]
-openai = ["openai>=1.0"]
+openai = ["openai>=3.19.2"]
 dev = ["pytest>=8.0", "ruff>=0.8"]
 
 [project.scripts]
