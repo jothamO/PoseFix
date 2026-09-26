@@ -29,7 +29,7 @@ def _dump(payload: dict, path: str | None) -> None:
 
 def cmd_plan(args: argparse.Namespace) -> int:
     analysis = _load(args.analysis)
-    plan = choose_plan(analysis, load_presets())
+    plan = choose_plan(analysis, load_presets(), intensity=args.intensity)
     target = None
     if plan.get("selection_status") == "selected":
         target = build_pose_target(analysis, plan, preset_map())
@@ -39,7 +39,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
 
 def cmd_spec(args: argparse.Namespace) -> int:
     analysis = _load(args.analysis)
-    plan = choose_plan(analysis, load_presets())
+    plan = choose_plan(analysis, load_presets(), intensity=args.intensity)
     if plan.get("selection_status") != "selected":
         _dump({"plan": plan, "generation_spec": None}, args.output)
         return 0
@@ -66,6 +66,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         analyze_and_plan(
             source_image_path=args.image,
             vision_adapter=_vision_adapter(args),
+            intensity=args.intensity,
         ),
         args.output,
     )
@@ -76,6 +77,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     planned = analyze_and_plan(
         source_image_path=args.image,
         vision_adapter=_vision_adapter(args),
+        intensity=args.intensity,
     )
     if args.image_provider == "none":
         _dump(planned, args.output)
@@ -107,6 +109,11 @@ def _add_vision_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--vision-model", default="gpt-6-sol")
     parser.add_argument("--fixture")
+    parser.add_argument(
+        "--intensity",
+        choices=["natural", "enhanced", "bold"],
+        default="natural",
+    )
 
 
 def main() -> int:
@@ -115,11 +122,21 @@ def main() -> int:
 
     plan_parser = subparsers.add_parser("plan")
     plan_parser.add_argument("analysis")
+    plan_parser.add_argument(
+        "--intensity",
+        choices=["natural", "enhanced", "bold"],
+        default="natural",
+    )
     plan_parser.add_argument("-o", "--output")
     plan_parser.set_defaults(func=cmd_plan)
 
     spec_parser = subparsers.add_parser("spec")
     spec_parser.add_argument("analysis")
+    spec_parser.add_argument(
+        "--intensity",
+        choices=["natural", "enhanced", "bold"],
+        default="natural",
+    )
     spec_parser.add_argument("-o", "--output")
     spec_parser.set_defaults(func=cmd_spec)
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .intensity import get_intensity_policy
+
 HARD_VIOLATIONS = {
     "age_change",
     "background_replacement",
@@ -33,14 +35,19 @@ THRESHOLDS = {
 def decide_review(
     checks: dict[str, float],
     violations: list[str],
+    intensity: str = "natural",
 ) -> dict[str, Any]:
+    policy = get_intensity_policy(intensity)
+    thresholds = dict(THRESHOLDS)
+    thresholds["pose_target_adherence"] = policy.pose_adherence_threshold
+
     hard = sorted(HARD_VIOLATIONS.intersection(violations))
     normalized = {
         key: {
             "score": float(value),
             "status": (
                 "pass"
-                if float(value) >= THRESHOLDS.get(key, 0.0)
+                if float(value) >= thresholds.get(key, 0.0)
                 else "fail"
             ),
             "confidence": 1.0,
@@ -76,6 +83,7 @@ def decide_review(
     return {
         "schema_version": "result_review.v1",
         "review_status": "complete",
+        "intensity": intensity,
         "decision": decision,
         "overall_score": round(overall, 4),
         "checks": normalized,
@@ -90,7 +98,13 @@ def decide_review(
             else None
         ),
         "fallback_recommendation": (
-            {"target": "lower_intensity", "intensity": "subtle"}
+            {
+                "target": "lower_intensity",
+                "intensity": (
+                    "enhanced" if intensity == "bold"
+                    else "natural"
+                ),
+            }
             if decision == "FALLBACK"
             else None
         ),

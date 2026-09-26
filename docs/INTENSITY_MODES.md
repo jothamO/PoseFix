@@ -1,0 +1,87 @@
+# PoseFix Intensity Modes
+
+PoseFix supports three user-facing correction intensities.
+
+## Natural
+Status: **locked default**
+
+Intent:
+> Improve the pose with the smallest meaningful correction while preserving the original photographic moment.
+
+Policy:
+- strongest preserve-original gate
+- secondary composite weight: 0.35
+- pose adherence threshold: 0.80
+- low reconstruction tolerance
+- preservation standards remain strict
+
+Natural is the existing validated PoseFix behavior and must not drift when Enhanced or Bold evolve.
+
+## Enhanced
+Status: **active**
+
+Intent:
+> Apply a clearly visible pose improvement while preserving the subject, scene, and original pose concept.
+
+Policy:
+- lower intervention gate than Natural
+- secondary composite weight: 0.50
+- target budget: up to 4 major mechanics
+- desired mechanic magnitude: 0.45-0.70
+- pose adherence threshold: 0.86
+- medium-low reconstruction tolerance
+- hands scale more conservatively than hips, stance, shoulders, and torso
+
+If the result preserves the photo but only achieves Natural-level correction, review should RETRY the under-applied mechanics.
+
+## Bold
+Status: **experimental**
+
+Intent:
+> Apply a substantial pose transformation while preserving identity, body shape, wardrobe, scene, and photographic credibility.
+
+Policy:
+- permissive intervention gate
+- secondary composite weight: 0.65
+- target budget: up to 6 major mechanics
+- desired mechanic magnitude: 0.70-1.00
+- pose adherence threshold: 0.90
+- medium reconstruction tolerance
+- stronger pose freedom, but not weaker identity/body/scene protection
+
+Bold remains experimental until Enhanced has sufficient validation evidence.
+
+## Invariant
+
+> **Intensity changes pose freedom, not preservation standards.**
+
+Identity, body shape, skin tone, clothing design, background, lighting, and camera relationship remain protected across all three modes.
+
+## Fallback ladder
+
+```text
+Bold
+  -> retry under-applied mechanics
+  -> Enhanced
+  -> Natural
+  -> preserve original
+
+Enhanced
+  -> retry under-applied mechanics
+  -> Natural
+  -> preserve original
+
+Natural
+  -> retry under-applied mechanics
+  -> preserve original when correction benefit is too small
+```
+
+## Provider rule
+
+Intensity is an engine policy, not a provider-specific prompt trick.
+
+```text
+Skills reason.
+Engine governs.
+Adapters translate.
+```
