@@ -7,13 +7,14 @@ import os
 from pathlib import Path
 from typing import Any
 
+from .openai_structured import POSE_ANALYSIS_FORMAT
 from .vision_base import VisionAnalysisAdapter
 
 
 class OpenAIVisionAdapter(VisionAnalysisAdapter):
     name = "openai"
 
-    def __init__(self, model: str = "gpt-5.6-luna") -> None:
+    def __init__(self, model: str = "gpt-6-sol") -> None:
         self.model = model
 
     @staticmethod
@@ -26,14 +27,11 @@ class OpenAIVisionAdapter(VisionAnalysisAdapter):
     @staticmethod
     def _prompt() -> str:
         return (
-            "You are the PoseFix pose-analysis skill. Analyze exactly one primary "
-            "human subject in the supplied photograph. Return ONLY valid JSON for "
-            "schema_version pose_analysis.v1. Describe what is visibly present, "
-            "identify pose mechanics with calibrated confidence, distinguish working "
-            "elements from issues, preserve good mechanics, estimate feasibility "
-            "conservatively, and suggest candidate presets without making generation "
-            "instructions. If the image cannot be reliably analyzed, return "
-            "analysis_status='unsupported' rather than fabricating observations."
+            "Analyze exactly one primary human subject for PoseFix. "
+            "Describe only visible pose mechanics. Preserve working elements. "
+            "Use calibrated severity and confidence. Do not evaluate attractiveness, "
+            "body size, or style quality. If the image is unsuitable, use an "
+            "unsupported or failed analysis status rather than inventing anatomy."
         )
 
     def analyze(self, *, source_image_path: str) -> dict[str, Any]:
@@ -62,12 +60,17 @@ class OpenAIVisionAdapter(VisionAnalysisAdapter):
                     ],
                 }
             ],
+            text={"format": POSE_ANALYSIS_FORMAT},
         )
         output_text = getattr(response, "output_text", None)
         if not output_text:
-            raise RuntimeError("OpenAI vision response did not contain output_text")
+            raise RuntimeError(
+                "OpenAI vision response did not contain structured output_text"
+            )
 
         try:
             return json.loads(output_text)
         except json.JSONDecodeError as exc:
-            raise RuntimeError("OpenAI vision response was not valid JSON") from exc
+            raise RuntimeError(
+                "OpenAI vision structured output was not valid JSON"
+            ) from exc
