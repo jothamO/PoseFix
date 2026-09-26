@@ -33,6 +33,11 @@ class OpenAIReviewAdapter(ResultReviewAdapter):
         return (
             "Compare IMAGE 1 (authoritative source) with IMAGE 2 (generated edit). "
             "Judge execution against the requested PoseFix target, not beauty. "
+            "For intensity_mode_adherence, verify that this individual option clearly "
+            "belongs to the requested Natural, Enhanced, or Bold mode and is not a "
+            "weaker or stronger neighboring mode. Distinct options may use different "
+            "pose solutions, but every option must independently satisfy the same "
+            "requested intensity boundary. "
             "Return normalized scores from 0 to 1 for every required review check "
             "and list only concrete hard violations that are visibly present. "
             "Do not decide PASS/RETRY/FALLBACK/REJECT; deterministic PoseFix engine "
