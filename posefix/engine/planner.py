@@ -101,6 +101,8 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
     if target.get("target_status") != "ready" or not preset:
         raise ValueError("Pose target is not ready for generation")
 
+    policy = get_intensity_policy(preset["intensity"])
+
     mechanics = []
     for name, rule in target.get("pose_target", {}).items():
         item = {
