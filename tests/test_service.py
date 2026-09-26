@@ -33,7 +33,7 @@ def test_correction_routes_fail_closed_without_service_key(monkeypatch):
 def test_create_and_get_correction_without_running_provider(monkeypatch):
     monkeypatch.setenv("POSEFIX_SERVICE_API_KEY", "test-secret")
     monkeypatch.setattr(
-        "posefix.service.app.execute_correction",
+        "posefix.service.runtime.execute_correction",
         lambda job_id: None,
     )
 
