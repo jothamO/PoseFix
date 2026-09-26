@@ -2,18 +2,32 @@ from __future__ import annotations
 
 import hmac
 import os
+from typing import Annotated
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .models import CorrectionCreated, CorrectionResponse, ErrorResponse, Intensity
-from .runtime import MAX_UPLOAD_BYTES, STORE, execute_correction, new_job, output_path, public_outputs, validate_and_store_upload
+from .runtime import (
+    MAX_UPLOAD_BYTES,
+    STORE,
+    execute_correction,
+    new_job,
+    output_path,
+    public_outputs,
+    validate_and_store_upload,
+)
 
 bearer = HTTPBearer(auto_error=False)
 
 
-def _authorize(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> None:
+def _authorize(
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer),
+    ] = None,
+) -> None:
     expected = os.getenv("POSEFIX_SERVICE_API_KEY")
     allow_unauthenticated = os.getenv("POSEFIX_SERVICE_ALLOW_UNAUTHENTICATED") == "1"
     if not expected:
@@ -49,8 +63,8 @@ def create_app() -> FastAPI:
     async def create_correction(
         request: Request,
         background_tasks: BackgroundTasks,
-        image: UploadFile = File(...),
-        intensity: Intensity = Form("natural"),
+        image: Annotated[UploadFile, File()],
+        intensity: Annotated[Intensity, Form()] = "natural",
     ) -> CorrectionCreated:
         content = await image.read(MAX_UPLOAD_BYTES + 1)
         job = new_job(intensity)
