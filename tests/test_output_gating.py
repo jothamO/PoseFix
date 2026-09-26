@@ -138,7 +138,7 @@ class DuplicateThenDistinctReviewer:
         return {"distinctness_score": 0.92, "materially_distinct": True}
 
 
-def test_duplicate_variant_is_retried_until_distinct(tmp_path):
+def test_duplicate_variant_gets_one_targeted_retry(tmp_path):
     planned = _planned()
     planned["generation_spec"]["task"]["output_count"] = 2
     planned["generation_spec"]["variation_plan"] = [
@@ -164,11 +164,17 @@ def test_duplicate_variant_is_retried_until_distinct(tmp_path):
         output_dir=str(tmp_path / "outputs"),
     )
 
-    assert result["generation"]["generation_status"] == "success"
-    assert len(result["generation"]["outputs"]) == 2
+    assert result["generation"]["generation_status"] == "partial_success"
+    assert len(result["generation"]["outputs"]) == 1
     assert any(
-        item.get("reason") == "insufficient_variant_distinctness"
+        item.get("reason") in {
+            "insufficient_variant_distinctness",
+            "targeted_retry_not_distinct",
+        }
         for item in result["attempt_log"]
+    )
+    assert result["generation"]["request"]["generation_budget_policy"] == (
+        "initial_batch_plus_one_targeted_retry_per_failed_slot"
     )
 
 
