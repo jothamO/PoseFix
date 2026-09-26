@@ -15,8 +15,14 @@ bearer = HTTPBearer(auto_error=False)
 
 def _authorize(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> None:
     expected = os.getenv("POSEFIX_SERVICE_API_KEY")
+    allow_unauthenticated = os.getenv("POSEFIX_SERVICE_ALLOW_UNAUTHENTICATED") == "1"
     if not expected:
-        return
+        if allow_unauthenticated:
+            return
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="service_api_key_not_configured",
+        )
     supplied = credentials.credentials if credentials and credentials.scheme.lower() == "bearer" else ""
     if not hmac.compare_digest(supplied, expected):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="unauthorized")
