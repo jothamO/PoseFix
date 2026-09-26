@@ -9,15 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .models import CorrectionCreated, CorrectionResponse, ErrorResponse, Intensity
-from .runtime import (
-    MAX_UPLOAD_BYTES,
-    STORE,
-    execute_correction,
-    new_job,
-    output_path,
-    public_outputs,
-    validate_and_store_upload,
-)
+from . import runtime
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -66,19 +58,19 @@ def create_app() -> FastAPI:
         image: Annotated[UploadFile, File()],
         intensity: Annotated[Intensity, Form()] = "natural",
     ) -> CorrectionCreated:
-        content = await image.read(MAX_UPLOAD_BYTES + 1)
-        job = new_job(intensity)
+        content = await image.read(runtime.MAX_UPLOAD_BYTES + 1)
+        job = runtime.new_job(intensity)
         try:
-            validate_and_store_upload(
+            runtime.validate_and_store_upload(
                 job=job,
                 content=content,
                 content_type=image.content_type,
             )
         except ValueError as exc:
-            STORE.update(job.id, status="failed", error=str(exc))
+            runtime.STORE.update(job.id, status="failed", error=str(exc))
             raise HTTPException(status_code=400, detail=str(exc)) from None
 
-        background_tasks.add_task(execute_correction, job.id)
+        background_tasks.add_task(runtime.execute_correction, job.id)
         return CorrectionCreated(
             id=job.id,
             status="queued",
@@ -94,8 +86,8 @@ def create_app() -> FastAPI:
         name="get_correction",
     )
     def get_correction(correction_id: str) -> CorrectionResponse:
-        STORE.cleanup_expired()
-        job = STORE.get(correction_id)
+        runtime.STORE.cleanup_expired()
+        job = runtime.STORE.get(correction_id)
         if not job:
             raise HTTPException(status_code=404, detail="correction_not_found")
         recommendation = None
@@ -108,7 +100,7 @@ def create_app() -> FastAPI:
             status=job.status,
             intensity=job.intensity,
             recommendation=recommendation,
-            outputs=public_outputs(job),
+            outputs=runtime.public_outputs(job),
             error=job.error,
         )
 
@@ -118,11 +110,11 @@ def create_app() -> FastAPI:
         dependencies=[Depends(_authorize)],
     )
     def download_output(correction_id: str, output_id: str) -> FileResponse:
-        STORE.cleanup_expired()
-        job = STORE.get(correction_id)
+        runtime.STORE.cleanup_expired()
+        job = runtime.STORE.get(correction_id)
         if not job:
             raise HTTPException(status_code=404, detail="correction_not_found")
-        path = output_path(job, output_id)
+        path = runtime.output_path(job, output_id)
         if not path:
             raise HTTPException(status_code=404, detail="output_not_available")
         return FileResponse(path, media_type="image/png", filename=f"{output_id}.png")
