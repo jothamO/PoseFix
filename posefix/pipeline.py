@@ -12,6 +12,7 @@ def analyze_and_plan(
     *,
     source_image_path: str,
     vision_adapter: Any,
+    intensity: str = "natural",
 ) -> dict[str, Any]:
     analysis = vision_adapter.analyze(
         source_image_path=source_image_path
@@ -19,7 +20,7 @@ def analyze_and_plan(
     validate_contract(analysis)
 
     presets = load_presets()
-    plan = choose_plan(analysis, presets)
+    plan = choose_plan(analysis, presets, intensity=intensity)
     validate_contract(plan)
 
     if plan.get("selection_status") != "selected":
