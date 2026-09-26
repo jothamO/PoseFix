@@ -13,7 +13,7 @@ class OpenAIImageAdapter:
 
     name = "openai"
 
-    def __init__(self, model: str = "gpt-image-2") -> None:
+    def __init__(self, model: str = "gpt-image-2.5-sunburst") -> None:
         self.model = model
 
     def capabilities(self) -> AdapterCapabilities:
@@ -92,6 +92,7 @@ class OpenAIImageAdapter:
                 model=self.model,
                 image=image_file,
                 prompt=self._prompt(generation_spec),
+                quality="high",
             )
 
         item = result.data[0]
