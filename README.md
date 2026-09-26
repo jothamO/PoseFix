@@ -110,6 +110,19 @@ Plan from an existing normalized analysis:
 posefix plan examples/test-portrait/pose_analysis.json
 ```
 
+## HTTP service
+
+PoseFix now includes a thin reference HTTP service around the engine.
+
+```bash
+python -m pip install -e '.[openai,service]'
+export POSEFIX_SERVICE_API_KEY='replace-with-a-long-random-secret'
+export OPENAI_API_KEY='...'
+uvicorn posefix.service.app:app --host 127.0.0.1 --port 8000
+```
+
+See [`docs/SERVICE_LAYER.md`](docs/SERVICE_LAYER.md) for the API contract, security model, and M1 completion criteria.
+
 ## Providers
 
 PoseFix is designed for two modes:

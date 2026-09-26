@@ -14,7 +14,20 @@ dependencies = ["jsonschema>=4.23"]
 
 [project.optional-dependencies]
 openai = ["openai>=3.19.2"]
-dev = ["pytest>=8.0", "ruff>=0.8"]
+service = [
+  "fastapi>=0.116",
+  "uvicorn>=0.35",
+  "python-multipart>=0.0.20",
+  "pillow>=11.0",
+]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.8",
+  "httpx>=0.28",
+  "fastapi>=0.116",
+  "python-multipart>=0.0.20",
+  "pillow>=11.0",
+]
 
 [project.scripts]
 posefix = "posefix.cli:main"

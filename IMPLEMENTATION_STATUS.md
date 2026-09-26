@@ -14,6 +14,11 @@
 - mock vision, generation, and review paths
 - early OpenAI vision/image/review adapter boundaries
 - CLI planning and analysis paths
+- HTTP service layer skeleton with correction creation/status/output routes
+- in-process correction job lifecycle
+- upload type/size/content validation and temporary private storage
+- bearer-protected correction routes with fail-closed configuration
+- reviewed PASS-only output downloads
 - Project Steward agent
 - Public Docs Writer skill
 - GitHub Maintainer agent
@@ -24,7 +29,9 @@
 
 ## Validation status
 
-The deterministic and mock pipeline was validated locally before publication with 7 passing tests and successful Python bytecode compilation. GitHub CI is configured to independently run Ruff and the test suite. Live-provider behavior remains experimental until a real portrait is run through analysis -> planning -> generation -> review.
+The deterministic and mock pipeline is covered by automated tests and GitHub CI. The M1 HTTP service implementation is now under validation. Live-provider behavior remains experimental until a real portrait is run through HTTP -> analysis -> planning -> generation -> review -> reviewed output retrieval.
+
+M1 is not complete until M1.5 live HTTP provider validation passes.
 
 ## Intentionally not implemented yet
 
