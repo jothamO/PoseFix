@@ -3,13 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .intensity import get_intensity_policy
+
 RISK_PENALTY = {
     "low": 0.0,
     "medium": 0.08,
     "high": 0.18,
 }
 
-MIN_CORRECTION_SIGNAL = 0.45
 
 ISSUE_SPECIALISTS = {
     "centered_weight": {"soft_weight_shift"},
@@ -211,6 +212,7 @@ COMPATIBLE_SECONDARIES = {
 def choose_plan(
     analysis: dict[str, Any],
     presets: list[dict[str, Any]],
+    intensity: str = "natural",
 ) -> dict[str, Any]:
     issues = analysis["diagnosis"].get("issues", [])
     correction_signal = max(
@@ -222,13 +224,16 @@ def choose_plan(
         default=0.0,
     )
 
-    if correction_signal < MIN_CORRECTION_SIGNAL:
+    policy = get_intensity_policy(intensity)
+
+    if correction_signal < policy.correction_signal_threshold:
         return {
             "schema_version": "composite_plan.v1",
             "selection_status": "no_strong_correction",
             "recommendation": "preserve_original",
             "reason": "already_good_pose",
             "correction_signal": round(correction_signal, 4),
+            "intensity": intensity,
             "components": [],
             "ranked_candidates": [],
         }
@@ -241,6 +246,7 @@ def choose_plan(
             "schema_version": "composite_plan.v1",
             "selection_status": "no_strong_correction",
             "recommendation": "preserve_original",
+            "intensity": intensity,
             "components": [],
             "ranked_candidates": [
                 item.__dict__ for item in ranked
@@ -286,7 +292,7 @@ def choose_plan(
             {
                 "preset_id": secondary.preset_id,
                 "role": "secondary",
-                "weight": 0.35,
+                "weight": policy.secondary_weight,
             }
         )
         label = "Natural Upgrade"
@@ -295,6 +301,7 @@ def choose_plan(
         "schema_version": "composite_plan.v1",
         "selection_status": "selected",
         "label": label,
+        "intensity": intensity,
         "components": components,
         "ranked_candidates": [
             item.__dict__ for item in ranked
