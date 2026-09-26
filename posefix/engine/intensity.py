@@ -18,6 +18,10 @@ class IntensityPolicy:
     crop_policy: str
     unseen_anatomy_policy: str
     hand_purpose_policy: str
+    framing_policy: str
+    subject_placement_policy: str
+    subject_scale_policy: str
+    support_object_policy: str
     status: str
 
 
@@ -36,6 +40,10 @@ INTENSITY_POLICIES = {
         crop_policy="preserve",
         unseen_anatomy_policy="do_not_invent",
         hand_purpose_policy="preserve",
+        framing_policy="preserve",
+        subject_placement_policy="preserve",
+        subject_scale_policy="preserve",
+        support_object_policy="preserve",
         status="locked",
     ),
     "enhanced": IntensityPolicy(
@@ -52,6 +60,10 @@ INTENSITY_POLICIES = {
         crop_policy="preserve",
         unseen_anatomy_policy="do_not_invent_for_repose",
         hand_purpose_policy="may_reassign_if_pose_requires",
+        framing_policy="preserve",
+        subject_placement_policy="preserve",
+        subject_scale_policy="preserve",
+        support_object_policy="preserve_or_reuse",
         status="locked",
     ),
     "bold": IntensityPolicy(
@@ -64,11 +76,15 @@ INTENSITY_POLICIES = {
         maximum_pose_change="substantial",
         limb_reconstruction_allowance="medium",
         reconstruction_tolerance="medium",
-        pose_concept_policy="may_reinterpret",
-        crop_policy="preserve",
-        unseen_anatomy_policy="minimize_invention",
-        hand_purpose_policy="may_reassign_if_pose_requires",
-        status="experimental",
+        pose_concept_policy="may_substantially_restage",
+        crop_policy="preserve_bounds",
+        unseen_anatomy_policy="do_not_invent_by_default",
+        hand_purpose_policy="may_reassign",
+        framing_policy="may_recompose_within_bounds",
+        subject_placement_policy="moderate_shift_allowed",
+        subject_scale_policy="small_change_allowed",
+        support_object_policy="may_reinterpret",
+        status="locked",
     ),
 }
 
