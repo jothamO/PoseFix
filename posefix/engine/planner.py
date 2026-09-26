@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .intensity import get_intensity_policy, scale_mechanic_strength
+
 
 def build_pose_target(
     analysis: dict[str, Any],
@@ -16,6 +18,8 @@ def build_pose_target(
             "pose_target": {},
         }
 
+    intensity = plan.get("intensity", "natural")
+    policy = get_intensity_policy(intensity)
     mechanics: dict[str, dict[str, Any]] = {}
     for component in plan["components"]:
         preset = presets_by_id[component["preset_id"]]
@@ -24,9 +28,10 @@ def build_pose_target(
         for name, rule in preset.get("mechanics", {}).items():
             candidate = dict(rule)
             if isinstance(candidate.get("strength"), (int, float)):
-                candidate["strength"] = round(
+                candidate["strength"] = scale_mechanic_strength(
+                    intensity,
+                    name,
                     float(candidate["strength"]) * weight,
-                    4,
                 )
 
             existing = mechanics.get(name)
@@ -51,7 +56,7 @@ def build_pose_target(
         "selected_preset": {
             "preset_id": primary,
             "label": plan.get("label", primary),
-            "intensity": "natural",
+            "intensity": intensity,
             "selection_score": plan["ranked_candidates"][0]["score"],
         },
         "preservation": {
@@ -60,15 +65,30 @@ def build_pose_target(
         },
         "pose_target": mechanics,
         "forbidden_changes": analysis.get("edit_plan", {}).get("avoid", []),
+        "intensity_policy": {
+            "mode": intensity,
+            "mechanic_budget": policy.mechanic_budget,
+            "change_magnitude": {
+                "minimum": policy.change_magnitude[0],
+                "maximum": policy.change_magnitude[1],
+            },
+            "pose_adherence_threshold": policy.pose_adherence_threshold,
+            "reconstruction_tolerance": policy.reconstruction_tolerance,
+            "status": policy.status,
+        },
         "edit_budget": {
-            "maximum_pose_change": "moderate",
+            "maximum_pose_change": policy.maximum_pose_change,
             "background_reconstruction_allowance": "minimal",
             "clothing_reconstruction_allowance": "minimal",
-            "limb_reconstruction_allowance": "low",
+            "limb_reconstruction_allowance": policy.limb_reconstruction_allowance,
         },
         "fallback": {
             "if_target_not_feasible": "reduce_intensity",
-            "fallback_intensity": "subtle",
+            "fallback_intensity": (
+                "enhanced" if intensity == "bold"
+                else "natural" if intensity == "enhanced"
+                else "natural"
+            ),
             "if_still_not_feasible": "preserve_original_pose",
         },
     }
@@ -113,8 +133,14 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
         "preservation_hierarchy": list(target.get("preservation", {}).keys()),
         "transform": {
             "summary": (
-                "Apply the minimum necessary correction "
-                f"for {preset['label']}."
+                (
+                    "Apply the minimum necessary correction "
+                    if preset["intensity"] == "natural"
+                    else "Apply a clearly visible pose improvement "
+                    if preset["intensity"] == "enhanced"
+                    else "Apply a substantial pose transformation "
+                )
+                + f"for {preset['label']}, while preserving all protected details."
             ),
             "mechanics": mechanics,
         },
@@ -165,7 +191,7 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             "return_metadata": True,
         },
         "variation_plan": [
-            {"variant_id": "natural", "intensity_multiplier": 1.0}
+            {"variant_id": preset["intensity"], "intensity_multiplier": 1.0}
         ],
         "retry_policy": {
             "max_attempts": 2,
