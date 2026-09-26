@@ -105,7 +105,7 @@ def validate_and_store_upload(
         with Image.open(candidate) as image:
             detected = image.format
             image.verify()
-    except (UnidentifiedImageError, OSError):
+    except (UnidentifiedImageError, OSError, SyntaxError):
         candidate.unlink(missing_ok=True)
         raise ValueError("invalid_image_content") from None
 
