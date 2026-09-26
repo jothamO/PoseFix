@@ -191,6 +191,7 @@ REVIEW_SCORES_FORMAT = {
                 "required": [
                     "identity_retention",
                     "pose_target_adherence",
+                    "intensity_mode_adherence",
                     "anatomical_plausibility",
                     "hand_quality",
                     "clothing_retention",
