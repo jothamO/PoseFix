@@ -105,7 +105,7 @@ def _add_vision_args(parser: argparse.ArgumentParser) -> None:
         choices=["mock", "openai"],
         default="mock",
     )
-    parser.add_argument("--vision-model", default="gpt-5.6-luna")
+    parser.add_argument("--vision-model", default="gpt-6-astra")
     parser.add_argument("--fixture")
 
 
@@ -137,13 +137,13 @@ def main() -> int:
         choices=["none", "openai"],
         default="none",
     )
-    run_parser.add_argument("--image-model", default="gpt-image-2")
+    run_parser.add_argument("--image-model", default="gpt-image-2.5-sunburst")
     run_parser.add_argument(
         "--review-provider",
         choices=["none", "openai"],
         default="none",
     )
-    run_parser.add_argument("--review-model", default="gpt-5.6-luna")
+    run_parser.add_argument("--review-model", default="gpt-6-astra")
     run_parser.add_argument("--output-dir", default="posefix-output")
     run_parser.add_argument("-o", "--output")
     run_parser.set_defaults(func=cmd_run)
