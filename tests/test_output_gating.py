@@ -80,7 +80,11 @@ def _planned():
                     "mode_consistency_required": True,
                 }
             ],
-            "retry_policy": {"max_attempts": 4},
+            "retry_policy": {
+                "max_attempts_per_slot": 2,
+                "targeted_retries_per_failed_slot": 1,
+                "request_budget_policy": "initial_batch_plus_one_targeted_retry_per_failed_slot",
+            },
             "transform": {"summary": "Apply Bold.", "mechanics": []},
         },
     }
@@ -165,4 +169,15 @@ def test_duplicate_variant_is_retried_until_distinct(tmp_path):
     assert any(
         item.get("reason") == "insufficient_variant_distinctness"
         for item in result["attempt_log"]
+    )
+
+
+def test_retry_policy_is_cost_bounded_to_one_targeted_retry():
+    planned = _planned()
+    policy = planned["generation_spec"]["retry_policy"]
+
+    assert policy["max_attempts_per_slot"] == 2
+    assert policy["targeted_retries_per_failed_slot"] == 1
+    assert policy["request_budget_policy"] == (
+        "initial_batch_plus_one_targeted_retry_per_failed_slot"
     )
