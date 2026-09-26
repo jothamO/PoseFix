@@ -295,7 +295,11 @@ def choose_plan(
                 "weight": policy.secondary_weight,
             }
         )
-        label = "Natural Upgrade"
+        label = (
+            "Natural Upgrade"
+            if intensity == "natural"
+            else f"{intensity.title()} Upgrade"
+        )
 
     return {
         "schema_version": "composite_plan.v1",
