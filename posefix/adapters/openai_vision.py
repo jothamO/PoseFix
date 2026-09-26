@@ -14,7 +14,7 @@ from .vision_base import VisionAnalysisAdapter
 class OpenAIVisionAdapter(VisionAnalysisAdapter):
     name = "openai"
 
-    def __init__(self, model: str = "gpt-5.6-sol") -> None:
+    def __init__(self, model: str = "gpt-6-sol") -> None:
         self.model = model
 
     @staticmethod
