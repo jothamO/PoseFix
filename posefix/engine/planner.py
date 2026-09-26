@@ -232,7 +232,7 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
             "on_background_drift": "tighten_preservation",
             "on_anatomy_failure": "retry_with_stricter_pose_constraints",
             "on_hand_failure": "preserve_original_hand_geometry",
-            "on_accessory_failure": "restore_source_accessories",
+            "on_accessory_failure": "restore_source_accessories_remove_invented_accessories",
             "on_pose_failure": "retry_under_applied_mechanics_then_fallback",
         },
         "review_requirements": {
@@ -242,7 +242,7 @@ def build_generation_spec(target: dict[str, Any]) -> dict[str, Any]:
                 "anatomical_plausibility",
                 "hand_quality",
                 "clothing_retention",
-                "accessory_retention",
+                "accessory_fidelity",
                 "background_retention",
                 "lighting_consistency",
                 "ground_contact",
