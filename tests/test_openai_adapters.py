@@ -39,3 +39,22 @@ def test_review_format_requires_all_engine_checks():
         "body_shape_preservation",
         "expression_preservation",
     }
+
+
+def test_openai_prompt_forbids_combined_choice_images():
+    spec = {
+        "preservation_hierarchy": ["identity", "body_shape"],
+        "transform": {"summary": "Apply Bold pose correction.", "mechanics": []},
+        "negative_constraints": [],
+        "scene_constraints": {
+            "crop": "preserve_bounds",
+            "framing": "may_recompose_within_bounds",
+            "subject_placement": "moderate_shift_allowed",
+            "subject_scale": "small_change_allowed",
+            "unseen_anatomy": "do_not_invent_by_default",
+        },
+    }
+
+    prompt = OpenAIImageAdapter._prompt(spec)
+    assert "separate standalone image" in prompt
+    assert "never as a contact sheet" in prompt
