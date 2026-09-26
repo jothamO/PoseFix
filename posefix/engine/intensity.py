@@ -14,6 +14,10 @@ class IntensityPolicy:
     maximum_pose_change: str
     limb_reconstruction_allowance: str
     reconstruction_tolerance: str
+    pose_concept_policy: str
+    crop_policy: str
+    unseen_anatomy_policy: str
+    hand_purpose_policy: str
     status: str
 
 
@@ -28,6 +32,10 @@ INTENSITY_POLICIES = {
         maximum_pose_change="moderate",
         limb_reconstruction_allowance="low",
         reconstruction_tolerance="low",
+        pose_concept_policy="preserve",
+        crop_policy="preserve",
+        unseen_anatomy_policy="do_not_invent",
+        hand_purpose_policy="preserve",
         status="locked",
     ),
     "enhanced": IntensityPolicy(
@@ -40,7 +48,11 @@ INTENSITY_POLICIES = {
         maximum_pose_change="clear",
         limb_reconstruction_allowance="medium_low",
         reconstruction_tolerance="medium_low",
-        status="active",
+        pose_concept_policy="may_reinterpret_within_source_frame",
+        crop_policy="preserve",
+        unseen_anatomy_policy="do_not_invent_for_repose",
+        hand_purpose_policy="may_reassign_if_pose_requires",
+        status="locked",
     ),
     "bold": IntensityPolicy(
         mode="bold",
@@ -52,6 +64,10 @@ INTENSITY_POLICIES = {
         maximum_pose_change="substantial",
         limb_reconstruction_allowance="medium",
         reconstruction_tolerance="medium",
+        pose_concept_policy="may_reinterpret",
+        crop_policy="preserve",
+        unseen_anatomy_policy="minimize_invention",
+        hand_purpose_policy="may_reassign_if_pose_requires",
         status="experimental",
     ),
 }
