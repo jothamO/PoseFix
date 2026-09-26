@@ -24,6 +24,7 @@ THRESHOLDS = {
     "anatomical_plausibility": 0.90,
     "hand_quality": 0.85,
     "clothing_retention": 0.90,
+    "accessory_retention": 0.95,
     "background_retention": 0.90,
     "lighting_consistency": 0.88,
     "ground_contact": 0.90,
@@ -67,6 +68,7 @@ def decide_review(
             "identity_retention",
             "anatomical_plausibility",
             "hand_quality",
+            "accessory_retention",
             "pose_target_adherence",
         )
         if not failed:
