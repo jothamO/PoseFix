@@ -18,10 +18,10 @@ Policy:
 Natural is the existing validated PoseFix behavior and must not drift when Enhanced or Bold evolve.
 
 ## Enhanced
-Status: **active**
+Status: **locked**
 
 Intent:
-> Apply a clearly visible pose improvement while preserving the subject, scene, and original pose concept.
+> Apply a clearly visible re-pose within the existing photographic frame while preserving the subject, scene, identity, and composition.
 
 Policy:
 - lower intervention gate than Natural
@@ -30,9 +30,17 @@ Policy:
 - desired mechanic magnitude: 0.45-0.70
 - pose adherence threshold: 0.86
 - medium-low reconstruction tolerance
-- hands scale more conservatively than hips, stance, shoulders, and torso
+- may change the pose concept when that change can be achieved using anatomy already visible in the source frame
+- may reassign hand purpose when the new pose requires it
+- must preserve the existing crop/framing
+- must not expand the crop to invent unseen anatomy merely to achieve a stronger pose
+- must preserve identity, body shape, clothing, background, lighting, and camera relationship
 
-If the result preserves the photo but only achieves Natural-level correction, review should RETRY the under-applied mechanics.
+Core rule:
+
+> **Enhanced can re-pose. It should not re-compose the photograph.**
+
+If the result preserves the photo but only achieves Natural-level correction, review should RETRY the under-applied mechanics. Tightening a retry must remove unsafe reconstruction without collapsing the requested intensity back toward Natural.
 
 ## Bold
 Status: **experimental**
