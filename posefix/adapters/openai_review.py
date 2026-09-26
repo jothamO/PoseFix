@@ -97,7 +97,11 @@ class OpenAIReviewAdapter(ResultReviewAdapter):
                 "OpenAI review structured output was not valid JSON"
             ) from exc
 
+        intensity = (
+            pose_target.get("selected_preset", {}).get("intensity", "natural")
+        )
         return decide_review(
             structured["scores"],
             structured["violations"],
+            intensity=intensity,
         )
