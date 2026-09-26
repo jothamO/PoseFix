@@ -13,7 +13,7 @@ class OpenAIImageAdapter:
 
     name = "openai"
 
-    def __init__(self, model: str = "gpt-image-2.5-sunburst") -> None:
+    def __init__(self, model: str = "gpt-image-2") -> None:
         self.model = model
 
     def capabilities(self) -> AdapterCapabilities:
