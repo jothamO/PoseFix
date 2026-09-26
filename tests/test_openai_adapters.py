@@ -33,6 +33,7 @@ def test_review_format_requires_all_engine_checks():
         "anatomical_plausibility",
         "hand_quality",
         "clothing_retention",
+        "accessory_fidelity",
         "background_retention",
         "lighting_consistency",
         "ground_contact",
@@ -58,3 +59,8 @@ def test_openai_prompt_forbids_combined_choice_images():
     prompt = OpenAIImageAdapter._prompt(spec)
     assert "separate standalone image" in prompt
     assert "never as a contact sheet" in prompt
+
+
+def test_accessory_fidelity_is_required_by_review_schema():
+    required = REVIEW_SCORES_FORMAT["schema"]["properties"]["scores"]["required"]
+    assert "accessory_fidelity" in required
