@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_experiment_result.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "strategy",
+    "generation_calls",
+    "review_calls",
+    "first_pass_success",
+    "targeted_retry_used",
+    "violations",
+    "validated",
+    "failure_classes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_experiment_result.v0"
+    },
+    "strategy": {
+      "enum": [
+        "whole_group",
+        "progressive_constrained"
+      ]
+    },
+    "generation_calls": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "review_calls": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "first_pass_success": {
+      "type": "boolean"
+    },
+    "targeted_retry_used": {
+      "type": "boolean"
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validated": {
+      "type": "boolean"
+    },
+    "provider_cost": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "failure_classes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}
