@@ -115,3 +115,169 @@ def map_reference_roles(
         )
 
     return assignments
+
+
+RECONSTRUCTION_DEBT_WEIGHTS = {
+    "small_posture_adjustment": 0.05,
+    "small_spacing_adjustment": 0.08,
+    "torso_rotation": 0.10,
+    "hand_role_change": 0.12,
+    "depth_order_change": 0.20,
+    "reveal_hidden_limb": 0.35,
+    "invent_scene_object": 1.00,
+}
+
+
+def estimate_reconstruction_debt(operations: list[str]) -> dict[str, Any]:
+    total = 0.0
+    forbidden: list[str] = []
+    applied: list[dict[str, Any]] = []
+
+    for operation in operations:
+        weight = float(RECONSTRUCTION_DEBT_WEIGHTS.get(operation, 0.15))
+        if operation == "invent_scene_object":
+            forbidden.append(operation)
+        total += weight
+        applied.append({"operation": operation, "weight": weight})
+
+    return {
+        "total": round(total, 3),
+        "operations": applied,
+        "forbidden_operations": forbidden,
+    }
+
+
+def adapt_template(
+    template_id: str,
+    people: list[dict[str, Any]],
+) -> dict[str, Any]:
+    template = GROUP_TEMPLATES[template_id]
+    count = len(people)
+    if not template["people_min"] <= count <= template["people_max"]:
+        return {
+            "template_id": template_id,
+            "status": "unsupported",
+            "reason": "people_count_incompatible",
+            "slots": [],
+        }
+
+    slots: list[dict[str, Any]] = []
+    roles = template["slot_roles"]
+    for index, person in enumerate(people):
+        role = roles[index] if index < len(roles) else "optional"
+        slots.append(
+            {
+                "slot_id": f"slot_{index + 1}",
+                "person_id": person["person_id"],
+                "role": role,
+                "locked": bool(person.get("locked", False)),
+                "requirement": "required" if index < template["people_min"] else "optional",
+            }
+        )
+
+    return {
+        "template_id": template_id,
+        "status": "adapted",
+        "formation": template["formation"],
+        "slots": slots,
+    }
+
+
+def build_group_target(
+    analysis: dict[str, Any],
+    template_id: str,
+    *,
+    operations: list[str] | None = None,
+    compatibility_score: float | None = None,
+) -> dict[str, Any]:
+    people = list(analysis.get("people", []))
+    adaptation = adapt_template(template_id, people)
+    if adaptation["status"] == "unsupported":
+        return {
+            "schema_version": "group_target.v0",
+            "target_status": "unsupported",
+            "compatibility": "unsupported",
+            "group_pose_graph": {},
+            "locked_people": [
+                person["person_id"] for person in people if person.get("locked")
+            ],
+            "forbidden_changes": ["invent_scene_object", "identity_reassignment"],
+        }
+
+    if compatibility_score is None:
+        template = GROUP_TEMPLATES[template_id]
+        compatibility_score, _ = _score_template(analysis, template)
+
+    compatibility = classify_compatibility(compatibility_score)
+    if compatibility == "unsupported":
+        status = "unsupported"
+    elif compatibility == "compatible":
+        status = "ready"
+    else:
+        status = "adapted"
+
+    debt = estimate_reconstruction_debt(operations or [])
+    if debt["forbidden_operations"]:
+        status = "unsupported"
+        compatibility = "unsupported"
+
+    locked_people = [
+        person["person_id"] for person in people if person.get("locked")
+    ]
+
+    person_nodes = []
+    for slot in adaptation["slots"]:
+        pose_policy = "preserve" if slot["locked"] else "adapt_to_template"
+        person_nodes.append(
+            {
+                "person_id": slot["person_id"],
+                "slot_id": slot["slot_id"],
+                "role": slot["role"],
+                "locked": slot["locked"],
+                "pose": {"policy": pose_policy},
+                "appearance_owner": slot["person_id"],
+            }
+        )
+
+    relationships = [
+        {
+            "a": edge["a"],
+            "b": edge["b"],
+            "interaction": edge.get("interaction", "preserve"),
+            "policy": "preserve_unless_template_requires_change",
+        }
+        for edge in analysis.get("relationships", [])
+    ]
+    occlusion_edges = [
+        {
+            "front": edge["front"],
+            "behind": edge["behind"],
+            "region": edge.get("region"),
+            "policy": "preserve_or_explicitly_replan",
+        }
+        for edge in analysis.get("occlusion_edges", [])
+    ]
+
+    return {
+        "schema_version": "group_target.v0",
+        "target_status": status,
+        "compatibility": compatibility,
+        "group_pose_graph": {
+            "schema_version": "group_pose_graph.v0",
+            "people": person_nodes,
+            "relationships": relationships,
+            "composition": {
+                "formation": adaptation["formation"],
+                "template_id": template_id,
+            },
+            "occlusion_edges": occlusion_edges,
+            "reconstruction_debt": debt,
+        },
+        "locked_people": locked_people,
+        "forbidden_changes": [
+            "invent_scene_object",
+            "identity_reassignment",
+            "appearance_cross_contamination",
+            "unapproved_intimate_contact",
+        ],
+    }
