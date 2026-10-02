@@ -90,11 +90,16 @@ def map_reference_roles(
         person_x = float(person.get("x", 0.5))
         person_visibility = person.get("body_visibility")
 
-        def cost(slot: dict[str, Any]) -> float:
-            spatial = abs(person_x - float(slot.get("x", 0.5)))
+        def cost(
+            slot: dict[str, Any],
+            *,
+            bound_person_x: float = person_x,
+            bound_person_visibility: Any = person_visibility,
+        ) -> float:
+            spatial = abs(bound_person_x - float(slot.get("x", 0.5)))
             visibility_penalty = 0.0
             required = slot.get("required_visibility")
-            if required and required != person_visibility:
+            if required and required != bound_person_visibility:
                 visibility_penalty = 0.25
             return spatial + visibility_penalty
 
