@@ -246,3 +246,18 @@ Track:
 - validated-result cost
 
 No GX work blocks PoseFix's existing single-person pre-public-launch plan.
+
+
+## GX-D0 hardening checkpoint
+
+The deterministic planner now also proves the following before GX-D1:
+
+- locked-person handling: a locked person receives `pose.policy=preserve`
+- explicit template adaptation across supported people counts
+- explicit target relationship graph preservation
+- explicit target occlusion graph preservation
+- reconstruction-debt accounting before provider spend
+- scene-object invention is a forbidden operation, not a high-cost fallback
+- appearance ownership remains bound to the original `person_id`
+
+This checkpoint still performs no live multi-person generation.
