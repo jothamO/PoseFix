@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_generation_spec.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "experiment",
+    "source",
+    "target",
+    "authority",
+    "generation_constraints",
+    "budget"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_generation_spec.v0"
+    },
+    "experiment": {
+      "type": "object",
+      "required": [
+        "milestone",
+        "status",
+        "strategy"
+      ],
+      "properties": {
+        "milestone": {
+          "const": "GX-D1"
+        },
+        "status": {
+          "const": "experimental"
+        },
+        "strategy": {
+          "enum": [
+            "whole_group",
+            "progressive_constrained"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object"
+    },
+    "target": {
+      "type": "object"
+    },
+    "authority": {
+      "type": "object"
+    },
+    "generation_constraints": {
+      "type": "object"
+    },
+    "budget": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}
