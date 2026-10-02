@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_pose_graph.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "people",
+    "relationships",
+    "composition",
+    "occlusion_edges"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_pose_graph.v0"
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "person_id",
+          "pose"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "interaction"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "composition": {
+      "type": "object",
+      "required": [
+        "formation"
+      ],
+      "additionalProperties": true
+    },
+    "occlusion_edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "front",
+          "behind"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "reconstruction_debt": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

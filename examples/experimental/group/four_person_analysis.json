@@ -1,0 +1,19 @@
+{
+  "schema_version": "group_analysis.v0",
+  "people_count": 4,
+  "people": [
+    {"person_id":"p1","source_region":{"x":0.08,"y":0.12,"w":0.2,"h":0.76},"body_visibility":"full_body","locked":true,"appearance_owner":"p1"},
+    {"person_id":"p2","source_region":{"x":0.29,"y":0.11,"w":0.2,"h":0.78},"body_visibility":"full_body","locked":false,"appearance_owner":"p2"},
+    {"person_id":"p3","source_region":{"x":0.48,"y":0.14,"w":0.2,"h":0.75},"body_visibility":"full_body","locked":false,"appearance_owner":"p3"},
+    {"person_id":"p4","source_region":{"x":0.72,"y":0.13,"w":0.2,"h":0.77},"body_visibility":"full_body","locked":false,"appearance_owner":"p4"}
+  ],
+  "relationships": [
+    {"a":"p2","b":"p3","interaction":"proximity"}
+  ],
+  "occlusion_edges": [
+    {"front":"p2","behind":"p3","region":"shoulder"}
+  ],
+  "horizontal_space": "high",
+  "occlusion_complexity": "medium",
+  "depth_cues": "moderate"
+}

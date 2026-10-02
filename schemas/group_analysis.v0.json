@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_analysis.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "people_count",
+    "people"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_analysis.v0"
+    },
+    "people_count": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "person_id",
+          "source_region",
+          "body_visibility"
+        ],
+        "properties": {
+          "person_id": {
+            "type": "string"
+          },
+          "source_region": {
+            "type": "object"
+          },
+          "body_visibility": {
+            "type": "string"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "appearance_owner": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "relationships": {
+      "type": "array"
+    },
+    "occlusion_edges": {
+      "type": "array"
+    },
+    "horizontal_space": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "occlusion_complexity": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "depth_cues": {
+      "enum": [
+        "low",
+        "moderate",
+        "high"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_template.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "template_id",
+    "people_min",
+    "people_max",
+    "formation",
+    "slots"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_template.v0"
+    },
+    "template_id": {
+      "type": "string"
+    },
+    "people_min": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "people_max": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "formation": {
+      "type": "string"
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "slot_id",
+          "requirement"
+        ],
+        "properties": {
+          "slot_id": {
+            "type": "string"
+          },
+          "requirement": {
+            "enum": [
+              "required",
+              "preferred",
+              "optional"
+            ]
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "relationship_rules": {
+      "type": "array"
+    },
+    "occlusion_policy": {
+      "type": "object"
+    },
+    "risk_class": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "very_high"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_target.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "target_status",
+    "group_pose_graph",
+    "compatibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_target.v0"
+    },
+    "target_status": {
+      "enum": [
+        "ready",
+        "adapted",
+        "unsupported"
+      ]
+    },
+    "compatibility": {
+      "enum": [
+        "compatible",
+        "adaptable",
+        "high_risk",
+        "unsupported"
+      ]
+    },
+    "group_pose_graph": {
+      "type": "object"
+    },
+    "locked_people": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_changes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

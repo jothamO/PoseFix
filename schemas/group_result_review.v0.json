@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_result_review.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "decision",
+    "person_checks",
+    "relationship_checks",
+    "group_checks",
+    "violations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_result_review.v0"
+    },
+    "decision": {
+      "enum": [
+        "PASS",
+        "RETRY",
+        "REJECT"
+      ]
+    },
+    "person_checks": {
+      "type": "array"
+    },
+    "relationship_checks": {
+      "type": "array"
+    },
+    "group_checks": {
+      "type": "object"
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}
