@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "group_reference.v0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pose_graph",
+    "authority"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "group_reference.v0"
+    },
+    "authority": {
+      "const": "geometry_only"
+    },
+    "pose_graph": {
+      "type": "object"
+    },
+    "prohibited_transfer": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "identity",
+          "face",
+          "body_appearance",
+          "clothing",
+          "accessories",
+          "background",
+          "lighting",
+          "scene_identity"
+        ]
+      }
+    }
+  },
+  "additionalProperties": true
+}
